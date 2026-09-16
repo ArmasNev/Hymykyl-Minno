@@ -13,3 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+.idea/deploymentTargetSelector.xml
+.idea/appInsightsSettings.xml
+.idea/deviceManager.xml
+.idea/planningMode.xml
+.idea/workspace.xml
+.idea/shelf/
