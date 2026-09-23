@@ -15,7 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.hymykyl_minno.ui.theme.*
@@ -55,18 +58,22 @@ private fun RatingItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val icon: ImageVector = when (rating) {
-        1 -> Icons.Default.MoodBad
-        2 -> Icons.Default.SentimentVeryDissatisfied
-        3 -> Icons.Default.SentimentDissatisfied
-        4 -> Icons.Default.SentimentDissatisfied
-        5 -> Icons.Default.SentimentNeutral
-        6 -> Icons.Default.SentimentSatisfied
-        7 -> Icons.Default.SentimentSatisfiedAlt
-        8 -> Icons.Default.Mood
-        9 -> Icons.Default.SentimentVerySatisfied
-        10 -> Icons.Default.SentimentVerySatisfied
-        else -> Icons.Default.SentimentNeutral
+    // NPS Standard Mapping:
+    // 1-6 Detractors: 😡 😠 😣 🙁 😕 😐 (6 is Neutral)
+    // 7-8 Passives:   🙂 😊
+    // 9-10 Promoters: 😀 😄
+    val emoji = when (rating) {
+        1 -> "😡"
+        2 -> "😠"
+        3 -> "😣"
+        4 -> "🙁"
+        5 -> "😕"
+        6 -> "😐" // Neutral
+        7 -> "🙂"
+        8 -> "😊"
+        9 -> "😀"
+        10 -> "😄" // Happy / Success
+        else -> "😐"
     }
 
     Column(
@@ -80,11 +87,16 @@ private fun RatingItem(
                 .background(if (isSelected) color else color.copy(alpha = 0.2f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (isSelected) Color.White else color,
-                modifier = Modifier.size(56.dp)
+            Text(
+                text = emoji,
+                fontSize = 55.sp,
+                style = TextStyle(
+                    platformStyle = PlatformTextStyle(
+                        includeFontPadding = false
+                    ),
+                    lineHeight = 55.sp,
+                    textAlign = TextAlign.Center
+                )
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
