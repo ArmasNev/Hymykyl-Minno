@@ -53,7 +53,7 @@ fun DetailedFeedbackScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 64.dp, vertical = 32.dp)
+                .padding(horizontal = 32.dp, vertical = 32.dp)
         ) {
             // Header (fixed)
             Column {
@@ -113,6 +113,13 @@ fun DetailedFeedbackScreen(
                                         delay(100)
                                         // Scroll the next question into the stationary active slot
                                         listState.animateScrollToItem(index = nextIndex, scrollOffset = -200)
+                                    }
+                                } else {
+                                    // Last question answered: collapse it into the completed summary queue
+                                    activeQuestionIndex = -1
+                                    coroutineScope.launch {
+                                        delay(100)
+                                        listState.animateScrollToItem(index = 0, scrollOffset = 0)
                                     }
                                 }
                             }

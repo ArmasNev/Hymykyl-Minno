@@ -38,15 +38,17 @@ fun SmileyRatingBar(
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         for (i in 1..10) {
-            RatingItem(
-                rating = i,
-                color = ratingColors[i - 1],
-                isSelected = selectedRating == i,
-                onClick = { onRatingSelected(i) }
-            )
+            Box(modifier = Modifier.weight(1f)) {
+                RatingItem(
+                    rating = i,
+                    color = ratingColors[i - 1],
+                    isSelected = selectedRating == i,
+                    onClick = { onRatingSelected(i) }
+                )
+            }
         }
     }
 }
@@ -78,32 +80,44 @@ private fun RatingItem(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable { onClick() }
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
     ) {
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
-                .size(72.dp)
-                .clip(CircleShape)
-                .background(if (isSelected) color else color.copy(alpha = 0.2f)),
+                .fillMaxWidth()
+                .padding(horizontal = 2.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = emoji,
-                fontSize = 55.sp,
-                style = TextStyle(
-                    platformStyle = PlatformTextStyle(
-                        includeFontPadding = false
-                    ),
-                    lineHeight = 55.sp,
-                    textAlign = TextAlign.Center
+            val circleSize = constraints.maxWidth.dp.coerceAtMost(72.dp)
+            val emojiFontSize = (circleSize.value * 0.65f).sp
+
+            Box(
+                modifier = Modifier
+                    .size(circleSize)
+                    .clip(CircleShape)
+                    .background(if (isSelected) color else color.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = emoji,
+                    fontSize = emojiFontSize,
+                    style = TextStyle(
+                        platformStyle = PlatformTextStyle(
+                            includeFontPadding = false
+                        ),
+                        lineHeight = emojiFontSize,
+                        textAlign = TextAlign.Center
+                    )
                 )
-            )
+            }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = rating.toString(),
             color = if (isSelected) TextDark else TextDark.copy(alpha = 0.5f),
-            fontSize = 14.sp,
+            fontSize = 13.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
     }
