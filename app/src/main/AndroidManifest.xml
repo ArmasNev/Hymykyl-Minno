@@ -17,6 +17,7 @@
             android:exported="true"
             android:label="@string/app_name"
             android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.HyMykyläMinno">
             <intent-filter>

@@ -1,13 +1,20 @@
 package com.example.hymykyl_minno.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -25,12 +32,20 @@ fun CommentScreen(
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     FeedbackLayout {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(64.dp)
+                .padding(32.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                    }
+                }
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -47,7 +62,7 @@ fun CommentScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Text(
                 text = "Haluatko kertoa jotain muuta?",
@@ -62,15 +77,24 @@ fun CommentScreen(
                 fontSize = 16.sp
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             OutlinedTextField(
                 value = uiState.comment,
                 onValueChange = { viewModel.updateComment(it) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
+                    .height(180.dp),
                 placeholder = { Text(text = "Kirjoita tähän...") },
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                    }
+                ),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MainOrange,
                     unfocusedBorderColor = Color.LightGray
@@ -104,6 +128,8 @@ fun CommentScreen(
                 }
                 Button(
                     onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
                         viewModel.submitFeedback()
                         onNext()
                     },

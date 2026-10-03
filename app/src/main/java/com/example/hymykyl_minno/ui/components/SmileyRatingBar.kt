@@ -15,7 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.hymykyl_minno.ui.theme.*
@@ -35,15 +38,17 @@ fun SmileyRatingBar(
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         for (i in 1..10) {
-            RatingItem(
-                rating = i,
-                color = ratingColors[i - 1],
-                isSelected = selectedRating == i,
-                onClick = { onRatingSelected(i) }
-            )
+            Box(modifier = Modifier.weight(1f)) {
+                RatingItem(
+                    rating = i,
+                    color = ratingColors[i - 1],
+                    isSelected = selectedRating == i,
+                    onClick = { onRatingSelected(i) }
+                )
+            }
         }
     }
 }
@@ -55,43 +60,64 @@ private fun RatingItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val icon: ImageVector = when (rating) {
-        1 -> Icons.Default.MoodBad
-        2 -> Icons.Default.SentimentVeryDissatisfied
-        3 -> Icons.Default.SentimentDissatisfied
-        4 -> Icons.Default.SentimentDissatisfied
-        5 -> Icons.Default.SentimentNeutral
-        6 -> Icons.Default.SentimentSatisfied
-        7 -> Icons.Default.SentimentSatisfiedAlt
-        8 -> Icons.Default.Mood
-        9 -> Icons.Default.SentimentVerySatisfied
-        10 -> Icons.Default.SentimentVerySatisfied
-        else -> Icons.Default.SentimentNeutral
+    // NPS Standard Mapping:
+    // 1-6 Detractors: 😡 😠 😣 🙁 😕 😐 (6 is Neutral)
+    // 7-8 Passives:   🙂 😊
+    // 9-10 Promoters: 😀 😄
+    val emoji = when (rating) {
+        1 -> "😡"
+        2 -> "😠"
+        3 -> "😣"
+        4 -> "🙁"
+        5 -> "😕"
+        6 -> "😐" // Neutral
+        7 -> "🙂"
+        8 -> "😊"
+        9 -> "😀"
+        10 -> "😄" // Happy / Success
+        else -> "😐"
     }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable { onClick() }
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
     ) {
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
-                .size(72.dp)
-                .clip(CircleShape)
-                .background(if (isSelected) color else color.copy(alpha = 0.2f)),
+                .fillMaxWidth()
+                .padding(horizontal = 2.dp),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (isSelected) Color.White else color,
-                modifier = Modifier.size(56.dp)
-            )
+            val circleSize = constraints.maxWidth.dp.coerceAtMost(72.dp)
+            val emojiFontSize = (circleSize.value * 0.65f).sp
+
+            Box(
+                modifier = Modifier
+                    .size(circleSize)
+                    .clip(CircleShape)
+                    .background(if (isSelected) color else color.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = emoji,
+                    fontSize = emojiFontSize,
+                    style = TextStyle(
+                        platformStyle = PlatformTextStyle(
+                            includeFontPadding = false
+                        ),
+                        lineHeight = emojiFontSize,
+                        textAlign = TextAlign.Center
+                    )
+                )
+            }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = rating.toString(),
             color = if (isSelected) TextDark else TextDark.copy(alpha = 0.5f),
-            fontSize = 14.sp,
+            fontSize = 13.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
     }

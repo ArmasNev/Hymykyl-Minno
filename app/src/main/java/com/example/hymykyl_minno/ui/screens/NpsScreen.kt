@@ -28,7 +28,7 @@ fun NpsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(64.dp)
+                .padding(horizontal = 32.dp, vertical = 32.dp)
         ) {
             // Header with language and progress
             Row(

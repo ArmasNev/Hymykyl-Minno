@@ -13,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,13 +48,12 @@ fun DetailedFeedbackScreen(
     var activeQuestionIndex by remember { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    val density = androidx.compose.ui.platform.LocalDensity.current
 
     FeedbackLayout {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 64.dp, vertical = 32.dp)
+                .padding(horizontal = 32.dp, vertical = 32.dp)
         ) {
             // Header (fixed)
             Column {
@@ -86,30 +84,13 @@ fun DetailedFeedbackScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Scrollable Content
-            BoxWithConstraints(modifier = Modifier.weight(1f)) {
-                val maxHeightPx = constraints.maxHeight
-                // centerOffset moves the *top* of the item to (maxHeight / 2 - averageItemHalfHeight)
-                // Using 130.dp as an estimate for half the height of an expanded question item.
-                val centerOffset = - (maxHeightPx / 2 - with(density) { 130.dp.roundToPx() })
-
-                // Function to handle rating and smooth transition
-                val handleRatingSelected: (Int, Int) -> Unit = { index, rating ->
-                    viewModel.updateDetailedRating(index, rating)
-                    if (index < questions.size - 1) {
-                        val nextIndex = index + 1
-                        activeQuestionIndex = nextIndex
-                        coroutineScope.launch {
-                            delay(150) // Slightly longer delay to ensure expansion starts
-                            listState.animateScrollToItem(index = nextIndex, scrollOffset = centerOffset)
-                        }
-                    }
-                }
-
+            // Scrollable Content area with fixed-position active item logic
+            Box(modifier = Modifier.weight(1f)) {
+                // Large top/bottom padding ensures items can move freely off-screen or stay in position
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 100.dp, bottom = 400.dp)
+                    contentPadding = PaddingValues(top = 180.dp, bottom = 300.dp)
                 ) {
                     itemsIndexed(questions) { index, question ->
                         QuestionItem(
@@ -119,12 +100,28 @@ fun DetailedFeedbackScreen(
                             onActivate = { 
                                 activeQuestionIndex = index
                                 coroutineScope.launch {
-                                    delay(150)
-                                    listState.animateScrollToItem(index = index, scrollOffset = centerOffset)
+                                    // Scroll so the activated item moves to the exact same top position
+                                    listState.animateScrollToItem(index = index, scrollOffset = -200)
                                 }
                             },
                             onRatingSelected = { rating ->
-                                handleRatingSelected(index, rating)
+                                viewModel.updateDetailedRating(index, rating)
+                                if (index < questions.size - 1) {
+                                    val nextIndex = index + 1
+                                    activeQuestionIndex = nextIndex
+                                    coroutineScope.launch {
+                                        delay(100)
+                                        // Scroll the next question into the stationary active slot
+                                        listState.animateScrollToItem(index = nextIndex, scrollOffset = -200)
+                                    }
+                                } else {
+                                    // Last question answered: collapse it into the completed summary queue
+                                    activeQuestionIndex = -1
+                                    coroutineScope.launch {
+                                        delay(100)
+                                        listState.animateScrollToItem(index = 0, scrollOffset = 0)
+                                    }
+                                }
                             }
                         )
                         if (index < questions.size - 1) {
@@ -187,18 +184,18 @@ fun QuestionItem(
             )
             if (!isActive && rating > 0) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    val icon: ImageVector = when (rating) {
-                        1 -> Icons.Default.SentimentVeryDissatisfied
-                        2 -> Icons.Default.MoodBad
-                        3 -> Icons.Default.SentimentDissatisfied
-                        4 -> Icons.Default.SentimentDissatisfied
-                        5 -> Icons.Default.SentimentNeutral
-                        6 -> Icons.Default.SentimentSatisfied
-                        7 -> Icons.Default.SentimentSatisfiedAlt
-                        8 -> Icons.Default.Mood
-                        9 -> Icons.Default.SentimentVerySatisfied
-                        10 -> Icons.Default.SentimentVerySatisfied
-                        else -> Icons.Default.SentimentNeutral
+                    val emoji = when (rating) {
+                        1 -> "😡"
+                        2 -> "😠"
+                        3 -> "😣"
+                        4 -> "🙁"
+                        5 -> "😕"
+                        6 -> "😐"
+                        7 -> "🙂"
+                        8 -> "😊"
+                        9 -> "😀"
+                        10 -> "😄"
+                        else -> "😐"
                     }
                     val ratingColors = listOf(
                         RatingRed1, RatingRed2,
@@ -208,11 +205,9 @@ fun QuestionItem(
                         RatingGreen1, RatingGreen2
                     )
                     val color = ratingColors[rating - 1]
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = color,
-                        modifier = Modifier.size(24.dp)
+                    Text(
+                        text = emoji,
+                        fontSize = 20.sp
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(text = rating.toString(), color = color, fontWeight = FontWeight.Bold)

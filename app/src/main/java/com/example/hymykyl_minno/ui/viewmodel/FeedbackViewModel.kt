@@ -52,6 +52,10 @@ class FeedbackViewModel(private val repository: FeedbackRepository) : ViewModel(
 
     fun submitFeedback() {
         val state = _uiState.value
+        if (state.isSubmitted) return // Guard against duplicate submissions
+
+        _uiState.update { it.copy(isSubmitted = true) }
+
         val feedback = Feedback(
             npsRating = state.npsRating,
             service = state.selectedService,
@@ -63,7 +67,6 @@ class FeedbackViewModel(private val repository: FeedbackRepository) : ViewModel(
         )
         viewModelScope.launch {
             repository.insertFeedback(feedback)
-            _uiState.update { it.copy(isSubmitted = true) }
         }
     }
 
