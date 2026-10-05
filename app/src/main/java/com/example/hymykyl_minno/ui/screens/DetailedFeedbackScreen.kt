@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hymykyl_minno.ui.components.FeedbackLayout
-import com.example.hymykyl_minno.ui.components.SmileyRatingBar
+import com.example.hymykyl_minno.ui.components.FiveSmileyRatingBar
 import com.example.hymykyl_minno.ui.theme.*
 import com.example.hymykyl_minno.ui.viewmodel.AppViewModelProvider
 import com.example.hymykyl_minno.ui.viewmodel.FeedbackViewModel
@@ -184,27 +184,18 @@ fun QuestionItem(
             )
             if (!isActive && rating > 0) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    val emoji = when (rating) {
-                        1 -> "😡"
-                        2 -> "😠"
-                        3 -> "😣"
-                        4 -> "🙁"
-                        5 -> "😕"
-                        6 -> "😐"
-                        7 -> "🙂"
-                        8 -> "😊"
-                        9 -> "😀"
-                        10 -> "😄"
-                        else -> "😐"
-                    }
-                    val ratingColors = listOf(
-                        RatingRed1, RatingRed2,
-                        RatingOrange1, RatingOrange2,
-                        RatingYellow1, RatingYellow2,
-                        RatingLightGreen1, RatingLightGreen2,
-                        RatingGreen1, RatingGreen2
+                    val fiveEmojis = listOf("😡", "😣", "😐", "😊", "😄")
+                    val fiveColors = listOf(
+                        RatingRed1,
+                        RatingOrange1,
+                        RatingYellow1,
+                        RatingLightGreen2,
+                        RatingGreen2
                     )
-                    val color = ratingColors[rating - 1]
+                    val safeIndex = (rating - 1).coerceIn(0, 4)
+                    val emoji = fiveEmojis[safeIndex]
+                    val color = fiveColors[safeIndex]
+
                     Text(
                         text = emoji,
                         fontSize = 20.sp
@@ -224,7 +215,7 @@ fun QuestionItem(
         ) {
             Column {
                 Spacer(modifier = Modifier.height(24.dp))
-                SmileyRatingBar(
+                FiveSmileyRatingBar(
                     selectedRating = rating,
                     onRatingSelected = onRatingSelected
                 )
