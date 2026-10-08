@@ -39,6 +39,10 @@ fun FeedbackNavGraph(
             ServiceSelectionScreen(
                 onNext = { navController.navigate(FeedbackScreen.DetailedFeedback.name) },
                 onBack = { navController.popBackStack() },
+                onSkip = {
+                    viewModel.submitFeedback()
+                    navController.navigate(FeedbackScreen.ThankYou.name)
+                },
                 viewModel = viewModel
             )
         }
@@ -46,6 +50,10 @@ fun FeedbackNavGraph(
             DetailedFeedbackScreen(
                 onNext = { navController.navigate(FeedbackScreen.Comment.name) },
                 onBack = { navController.popBackStack() },
+                onSkip = {
+                    viewModel.submitFeedback()
+                    navController.navigate(FeedbackScreen.ThankYou.name)
+                },
                 viewModel = viewModel
             )
         }
@@ -53,6 +61,10 @@ fun FeedbackNavGraph(
             CommentScreen(
                 onNext = { navController.navigate(FeedbackScreen.ThankYou.name) },
                 onBack = { navController.popBackStack() },
+                onSkip = {
+                    viewModel.submitFeedback()
+                    navController.navigate(FeedbackScreen.ThankYou.name)
+                },
                 viewModel = viewModel
             )
         }

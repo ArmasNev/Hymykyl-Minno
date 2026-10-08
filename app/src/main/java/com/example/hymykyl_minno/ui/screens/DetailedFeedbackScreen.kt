@@ -1,6 +1,7 @@
 package com.example.hymykyl_minno.ui.screens
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,6 +30,7 @@ import kotlinx.coroutines.launch
 fun DetailedFeedbackScreen(
     onNext: () -> Unit,
     onBack: () -> Unit,
+    onSkip: () -> Unit = {},
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -97,7 +99,7 @@ fun DetailedFeedbackScreen(
                             question = question,
                             rating = ratings[index],
                             isActive = activeQuestionIndex == index,
-                            onActivate = { 
+                            onActivate = {
                                 activeQuestionIndex = index
                                 coroutineScope.launch {
                                     // Scroll so the activated item moves to the exact same top position
@@ -142,6 +144,9 @@ fun DetailedFeedbackScreen(
             ) {
                 TextButton(onClick = onBack) {
                     Text(text = "Takaisin", color = Color.Gray, fontSize = 18.sp)
+                }
+                TextButton(onClick = onSkip) {
+                    Text(text = "Ohita", color = Color.Gray, fontSize = 18.sp)
                 }
                 Button(
                     onClick = onNext,
@@ -210,8 +215,8 @@ fun QuestionItem(
 
         AnimatedVisibility(
             visible = isActive,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut()
+            enter = expandVertically(animationSpec = tween(200)) + fadeIn(animationSpec = tween(200)),
+            exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200))
         ) {
             Column {
                 Spacer(modifier = Modifier.height(24.dp))
