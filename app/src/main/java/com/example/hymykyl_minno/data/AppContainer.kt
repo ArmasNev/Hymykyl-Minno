@@ -8,6 +8,11 @@ interface AppContainer {
 
 class AppDataContainer(private val context: Context) : AppContainer {
     override val feedbackRepository: FeedbackRepository by lazy {
-        FeedbackRepository(FeedbackDatabase.getDatabase(context).feedbackDao())
+        val db = FeedbackDatabase.getDatabase(context)
+        FeedbackRepository(
+            feedbackDao = db.feedbackDao(),
+            adminUserDao = db.adminUserDao(),
+            surveyQuestionDao = db.surveyQuestionDao()
+        )
     }
 }

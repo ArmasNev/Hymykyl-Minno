@@ -34,12 +34,14 @@ fun DetailedFeedbackScreen(
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val questions = listOf(
+    val dbQuestions by viewModel.surveyQuestions.collectAsState()
+    val fallbackQuestions = listOf(
         "Palvelut olivat helposti saatavilla",
         "Palvelukokemus oli mielestäni viihtyisä ja sujuva",
         "Koen saaneeni toiveeni tarvittaessa kuulluksi",
         "Haluaisin tulla uudelleen"
     )
+    val questions = if (dbQuestions.isNotEmpty()) dbQuestions.map { it.textFi } else fallbackQuestions
     val ratings = listOf(
         uiState.accessibilityRating,
         uiState.fluencyRating,

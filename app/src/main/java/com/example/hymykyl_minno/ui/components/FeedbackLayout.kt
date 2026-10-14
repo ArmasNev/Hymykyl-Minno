@@ -2,12 +2,14 @@ package com.example.hymykyl_minno.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -19,6 +21,7 @@ import com.example.hymykyl_minno.ui.theme.MainOrange
 
 @Composable
 fun FeedbackLayout(
+    onAdminAccessRequested: () -> Unit = {},
     content: @Composable RowScope.() -> Unit
 ) {
     Row(
@@ -43,7 +46,19 @@ fun FeedbackLayout(
                     contentDescription = "Metropolia Logo",
                     modifier = Modifier
                         .height(50.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onPress = {
+                                    val startTime = System.currentTimeMillis()
+                                    val released = tryAwaitRelease()
+                                    val duration = System.currentTimeMillis() - startTime
+                                    if (released && duration >= 3000L) { // 3-5 sec long press
+                                        onAdminAccessRequested()
+                                    }
+                                }
+                            )
+                        },
                     contentScale = ContentScale.Fit,
                     alignment = Alignment.TopStart
                 )

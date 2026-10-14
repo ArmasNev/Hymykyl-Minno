@@ -20,11 +20,12 @@ import com.example.hymykyl_minno.ui.viewmodel.FeedbackViewModel
 @Composable
 fun NpsScreen(
     onNext: () -> Unit,
+    onAdminAccess: () -> Unit = {},
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    FeedbackLayout {
+    FeedbackLayout(onAdminAccessRequested = onAdminAccess) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
