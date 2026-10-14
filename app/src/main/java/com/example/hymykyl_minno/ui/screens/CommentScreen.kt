@@ -29,6 +29,7 @@ import com.example.hymykyl_minno.ui.viewmodel.FeedbackViewModel
 fun CommentScreen(
     onNext: () -> Unit,
     onBack: () -> Unit,
+    onSkip: () -> Unit = {},
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -125,6 +126,9 @@ fun CommentScreen(
             ) {
                 TextButton(onClick = onBack) {
                     Text(text = "Takaisin", color = Color.Gray, fontSize = 18.sp)
+                }
+                TextButton(onClick = onSkip) {
+                    Text(text = "Ohita", color = Color.Gray, fontSize = 18.sp)
                 }
                 Button(
                     onClick = {

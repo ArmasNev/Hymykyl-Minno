@@ -1,6 +1,7 @@
 package com.example.hymykyl_minno.ui.screens
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hymykyl_minno.ui.components.FeedbackLayout
-import com.example.hymykyl_minno.ui.components.SmileyRatingBar
+import com.example.hymykyl_minno.ui.components.FiveSmileyRatingBar
 import com.example.hymykyl_minno.ui.theme.*
 import com.example.hymykyl_minno.ui.viewmodel.AppViewModelProvider
 import com.example.hymykyl_minno.ui.viewmodel.FeedbackViewModel
@@ -29,6 +30,7 @@ import kotlinx.coroutines.launch
 fun DetailedFeedbackScreen(
     onNext: () -> Unit,
     onBack: () -> Unit,
+    onSkip: () -> Unit = {},
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -97,7 +99,7 @@ fun DetailedFeedbackScreen(
                             question = question,
                             rating = ratings[index],
                             isActive = activeQuestionIndex == index,
-                            onActivate = { 
+                            onActivate = {
                                 activeQuestionIndex = index
                                 coroutineScope.launch {
                                     // Scroll so the activated item moves to the exact same top position
@@ -143,6 +145,9 @@ fun DetailedFeedbackScreen(
                 TextButton(onClick = onBack) {
                     Text(text = "Takaisin", color = Color.Gray, fontSize = 18.sp)
                 }
+                TextButton(onClick = onSkip) {
+                    Text(text = "Ohita", color = Color.Gray, fontSize = 18.sp)
+                }
                 Button(
                     onClick = onNext,
                     enabled = ratings.all { it > 0 },
@@ -184,27 +189,18 @@ fun QuestionItem(
             )
             if (!isActive && rating > 0) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    val emoji = when (rating) {
-                        1 -> "😡"
-                        2 -> "😠"
-                        3 -> "😣"
-                        4 -> "🙁"
-                        5 -> "😕"
-                        6 -> "😐"
-                        7 -> "🙂"
-                        8 -> "😊"
-                        9 -> "😀"
-                        10 -> "😄"
-                        else -> "😐"
-                    }
-                    val ratingColors = listOf(
-                        RatingRed1, RatingRed2,
-                        RatingOrange1, RatingOrange2,
-                        RatingYellow1, RatingYellow2,
-                        RatingLightGreen1, RatingLightGreen2,
-                        RatingGreen1, RatingGreen2
+                    val fiveEmojis = listOf("😡", "😣", "😐", "😊", "😄")
+                    val fiveColors = listOf(
+                        RatingRed1,
+                        RatingOrange1,
+                        RatingYellow1,
+                        RatingLightGreen2,
+                        RatingGreen2
                     )
-                    val color = ratingColors[rating - 1]
+                    val safeIndex = (rating - 1).coerceIn(0, 4)
+                    val emoji = fiveEmojis[safeIndex]
+                    val color = fiveColors[safeIndex]
+
                     Text(
                         text = emoji,
                         fontSize = 20.sp
@@ -219,12 +215,12 @@ fun QuestionItem(
 
         AnimatedVisibility(
             visible = isActive,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut()
+            enter = expandVertically(animationSpec = tween(200)) + fadeIn(animationSpec = tween(200)),
+            exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200))
         ) {
             Column {
                 Spacer(modifier = Modifier.height(24.dp))
-                SmileyRatingBar(
+                FiveSmileyRatingBar(
                     selectedRating = rating,
                     onRatingSelected = onRatingSelected
                 )
