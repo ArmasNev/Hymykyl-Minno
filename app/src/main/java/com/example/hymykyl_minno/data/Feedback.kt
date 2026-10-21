@@ -6,13 +6,14 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "feedback")
 data class Feedback(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val id: Long = 0,
     val npsRating: Int,
     val service: String,
-    val accessibilityRating: Int,
-    val fluencyRating: Int,
-    val heardRating: Int,
-    val returnRating: Int,
+    val accessibilityRating: Int = 0,
+    val fluencyRating: Int = 0,
+    val heardRating: Int = 0,
+    val returnRating: Int = 0,
     val comment: String,
+    val languageUsed: String = "FI",
     val timestamp: Long = System.currentTimeMillis()
 )

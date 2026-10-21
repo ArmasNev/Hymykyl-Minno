@@ -1,13 +1,20 @@
 package com.example.hymykyl_minno.ui.screens
 
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
+import android.widget.Toast
 import androidx.core.content.FileProvider
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
@@ -26,6 +33,7 @@ import com.example.hymykyl_minno.ui.theme.MainOrange
 import com.example.hymykyl_minno.ui.theme.TextDark
 import com.example.hymykyl_minno.ui.viewmodel.AppViewModelProvider
 import com.example.hymykyl_minno.ui.viewmodel.FeedbackViewModel
+import kotlinx.coroutines.launch
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,11 +43,14 @@ fun AdminDashboardScreen(
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val feedbackList by viewModel.allFeedback.collectAsState()
     val questions by viewModel.surveyQuestions.collectAsState()
 
     var selectedTab by remember { mutableIntStateOf(0) } // 0 = Export, 1 = Kysymykset
     var editingQuestion by remember { mutableStateOf<SurveyQuestion?>(null) }
+    var deletingQuestion by remember { mutableStateOf<SurveyQuestion?>(null) }
+    var showAddDialog by remember { mutableStateOf(false) }
 
     FeedbackLayout {
         Column(
@@ -80,7 +91,7 @@ fun AdminDashboardScreen(
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Kysymysten hallinta (FI, EN, SV)") }
+                    text = { Text("Kysymysten hallinta (${questions.size} kysymystä)") }
                 )
             }
 
@@ -106,60 +117,123 @@ fun AdminDashboardScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = "Lataa tietokannan vastaukset CSV-muodossa Exceliä tai PowerBI:tä varten.",
+                            text = "Tallenna CSV-tiedosto suoraan laitteen latauskansioon ilman Google-tiliä, tai jaa se eteenpäin.",
                             color = Color.Gray,
                             fontSize = 16.sp
                         )
 
                         Spacer(modifier = Modifier.height(32.dp))
 
-                        Button(
-                            onClick = {
-                                val csvData = viewModel.generateCsvContent(feedbackList)
-                                shareCsvFile(context, csvData)
-                            },
-                            enabled = feedbackList.isNotEmpty(),
-                            modifier = Modifier.height(56.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Icon(Icons.Default.Share, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Jaa / Vie CSV-tiedosto", fontSize = 18.sp, color = Color.White)
+                            Button(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        val csvData = viewModel.generateCsvContent(feedbackList)
+                                        val resultPath = saveCsvToDownloads(context, csvData)
+                                        if (resultPath != null) {
+                                            Toast.makeText(
+                                                context,
+                                                "Tiedosto tallennettu kansioon: $resultPath",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                "Tallennus epäonnistui",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
+                                },
+                                enabled = feedbackList.isNotEmpty(),
+                                modifier = Modifier.height(56.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                            ) {
+                                Icon(Icons.Default.Download, contentDescription = null, tint = Color.White)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Tallenna laitteen Lataukset-kansioon", fontSize = 16.sp, color = Color.White)
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        val csvData = viewModel.generateCsvContent(feedbackList)
+                                        shareCsvFile(context, csvData)
+                                    }
+                                },
+                                enabled = feedbackList.isNotEmpty(),
+                                modifier = Modifier.height(56.dp)
+                            ) {
+                                Icon(Icons.Default.Share, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Jaa / Lähetä eteenpäin", fontSize = 16.sp)
+                            }
                         }
                     }
                 }
 
                 1 -> {
                     // Questions Tab
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(questions) { q ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(text = "FI: ${q.textFi}", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextDark)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(text = "EN: ${q.textEn}", fontSize = 14.sp, color = Color.Gray)
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(text = "SV: ${q.textSv}", fontSize = 14.sp, color = Color.Gray)
-                                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Kyselyvaiheen 3 kysymykset",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDark
+                            )
 
-                                    IconButton(onClick = { editingQuestion = q }) {
-                                        Icon(Icons.Default.Edit, contentDescription = "Muokkaa", tint = MainOrange)
+                            Button(
+                                onClick = { showAddDialog = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Lisää uusi kysymys", color = Color.White)
+                            }
+                        }
+
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(questions) { q ->
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(text = "FI: ${q.textFi}", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextDark)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(text = "EN: ${q.textEn}", fontSize = 14.sp, color = Color.Gray)
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(text = "SV: ${q.textSv}", fontSize = 14.sp, color = Color.Gray)
+                                        }
+
+                                        Row {
+                                            IconButton(onClick = { editingQuestion = q }) {
+                                                Icon(Icons.Default.Edit, contentDescription = "Muokkaa", tint = MainOrange)
+                                            }
+                                            IconButton(onClick = { deletingQuestion = q }) {
+                                                Icon(Icons.Default.Delete, contentDescription = "Poista", tint = MaterialTheme.colorScheme.error)
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -168,6 +242,62 @@ fun AdminDashboardScreen(
                 }
             }
         }
+    }
+
+    // Add New Question Dialog
+    if (showAddDialog) {
+        var textFi by remember { mutableStateOf("") }
+        var textEn by remember { mutableStateOf("") }
+        var textSv by remember { mutableStateOf("") }
+
+        AlertDialog(
+            onDismissRequest = { showAddDialog = false },
+            title = { Text("Lisää uusi kysymys (3 kieltä)") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = textFi,
+                        onValueChange = { textFi = it },
+                        label = { Text("Suomi (FI)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = textEn,
+                        onValueChange = { textEn = it },
+                        label = { Text("Englanti (EN)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = textSv,
+                        onValueChange = { textSv = it },
+                        label = { Text("Ruotsi (SV)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (textFi.isNotBlank()) {
+                            viewModel.addQuestion(
+                                textFi = textFi.trim(),
+                                textEn = textEn.trim().ifEmpty { textFi.trim() },
+                                textSv = textSv.trim().ifEmpty { textFi.trim() }
+                            )
+                            showAddDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                ) {
+                    Text("Lisää")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialog = false }) {
+                    Text("Peruuta")
+                }
+            }
+        )
     }
 
     // Edit Question Dialog
@@ -219,6 +349,62 @@ fun AdminDashboardScreen(
                 }
             }
         )
+    }
+
+    // Delete Question Confirmation Dialog
+    deletingQuestion?.let { q ->
+        AlertDialog(
+            onDismissRequest = { deletingQuestion = null },
+            title = { Text("Poista kysymys?") },
+            text = { Text("Haluatko varmasti poistaa kysymyksen: \"${q.textFi}\"?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteQuestion(q)
+                        deletingQuestion = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Poista", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deletingQuestion = null }) {
+                    Text("Peruuta")
+                }
+            }
+        )
+    }
+}
+
+private fun saveCsvToDownloads(context: Context, csvData: String): String? {
+    return try {
+        val fileName = "hymykyla_palautteet_${System.currentTimeMillis()}.csv"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+            }
+            val resolver = context.contentResolver
+            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+            if (uri != null) {
+                resolver.openOutputStream(uri)?.use { stream ->
+                    stream.write(csvData.toByteArray())
+                }
+                "Lataukset / Downloads"
+            } else null
+        } else {
+            @Suppress("DEPRECATION")
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            if (!downloadsDir.exists()) downloadsDir.mkdirs()
+            val file = File(downloadsDir, fileName)
+            file.writeText(csvData)
+            file.absolutePath
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 }
 

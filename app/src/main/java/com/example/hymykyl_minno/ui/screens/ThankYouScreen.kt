@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hymykyl_minno.ui.components.FeedbackLayout
+import com.example.hymykyl_minno.ui.localization.AppStrings
 import com.example.hymykyl_minno.ui.theme.MainOrange
 import com.example.hymykyl_minno.ui.theme.TextDark
 import com.example.hymykyl_minno.ui.viewmodel.AppViewModelProvider
@@ -27,6 +28,8 @@ fun ThankYouScreen(
     onFinish: () -> Unit,
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val lang = uiState.selectedLanguage
     var countdown by remember { mutableIntStateOf(10) }
 
     LaunchedEffect(Unit) {
@@ -38,7 +41,7 @@ fun ThankYouScreen(
         onFinish()
     }
 
-    FeedbackLayout {
+    FeedbackLayout(selectedLanguage = lang) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -56,7 +59,7 @@ fun ThankYouScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Kiitos.",
+                text = AppStrings.thankYouTitle(lang),
                 fontSize = 40.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextDark
@@ -65,22 +68,30 @@ fun ThankYouScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Palautteesi on vastaanotettu. Arvostamme aikaasi suuresti.",
+                text = AppStrings.thankYouSubtitle(lang),
                 fontSize = 18.sp,
                 color = Color.Gray,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = AppStrings.thankYouResetText(countdown, lang),
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             TextButton(onClick = {
                 viewModel.resetFeedback()
                 onFinish()
             }) {
-                Text(text = "Lähetä uusi vastaus", color = MainOrange, fontSize = 16.sp)
+                Text(text = AppStrings.btnReturnToStart(lang), color = MainOrange, fontSize = 16.sp)
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Box(contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(

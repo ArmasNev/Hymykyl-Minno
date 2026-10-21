@@ -16,11 +16,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.hymykyl_minno.R
+import com.example.hymykyl_minno.ui.localization.AppStrings
 import com.example.hymykyl_minno.ui.theme.BackgroundCream
 import com.example.hymykyl_minno.ui.theme.MainOrange
 
 @Composable
 fun FeedbackLayout(
+    selectedLanguage: String = "FI",
     onAdminAccessRequested: () -> Unit = {},
     content: @Composable RowScope.() -> Unit
 ) {
@@ -64,7 +66,7 @@ fun FeedbackLayout(
                 )
 
                 Text(
-                    text = "Kokemuksesi\non meille tärkeä.",
+                    text = AppStrings.sidebarTitle(selectedLanguage),
                     color = Color.White,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
@@ -73,7 +75,7 @@ fun FeedbackLayout(
 
                 Column {
                     Text(
-                        text = "Vastaukset ovat anonyymejä ja auttavat meitä kehittymään. Tähän kuluu noin 2 minuuttia.",
+                        text = AppStrings.sidebarDesc(selectedLanguage),
                         color = Color.White,
                         fontSize = 13.sp
                     )

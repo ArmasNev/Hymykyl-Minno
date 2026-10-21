@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hymykyl_minno.data.AdminUser
 import com.example.hymykyl_minno.data.Feedback
+import com.example.hymykyl_minno.data.FeedbackAnswer
 import com.example.hymykyl_minno.data.FeedbackRepository
 import com.example.hymykyl_minno.data.SurveyQuestion
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -18,12 +21,10 @@ import java.util.Date
 import java.util.Locale
 
 data class FeedbackUiState(
+    val selectedLanguage: String = "FI",
     val npsRating: Int = 0,
     val selectedService: String = "",
-    val accessibilityRating: Int = 0,
-    val fluencyRating: Int = 0,
-    val heardRating: Int = 0,
-    val returnRating: Int = 0,
+    val detailedRatings: Map<Int, Int> = emptyMap(),
     val comment: String = "",
     val isSubmitted: Boolean = false
 )
@@ -36,8 +37,54 @@ class FeedbackViewModel(private val repository: FeedbackRepository) : ViewModel(
     val allFeedback: StateFlow<List<Feedback>> = repository.getAllFeedback()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val surveyQuestions: StateFlow<List<SurveyQuestion>> = repository.getAllQuestions()
+    val allAnswers: StateFlow<List<FeedbackAnswer>> = repository.getAllAnswers()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val surveyQuestions: StateFlow<List<SurveyQuestion>> = repository.getAllQuestions()
+        .map { list -> list.distinctBy { it.questionKey } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    init {
+        viewModelScope.launch {
+            if (repository.getQuestionCount() == 0) {
+                val defaultQuestions = listOf(
+                    SurveyQuestion(
+                        questionKey = "ACCESSIBILITY",
+                        textFi = "Palvelut olivat helposti saatavilla",
+                        textEn = "Services were easily accessible",
+                        textSv = "Tjänsterna var lättillgängliga",
+                        displayOrder = 1
+                    ),
+                    SurveyQuestion(
+                        questionKey = "FLUENCY",
+                        textFi = "Palvelukokemus oli mielestäni viihtyisä ja sujuva",
+                        textEn = "The service experience was pleasant and smooth",
+                        textSv = "Tjänsteupplevelsen var trevlig och smidig",
+                        displayOrder = 2
+                    ),
+                    SurveyQuestion(
+                        questionKey = "HEARD",
+                        textFi = "Koen saaneeni toiveeni tarvittaessa kuulluksi",
+                        textEn = "I feel my wishes were heard if needed",
+                        textSv = "Jag känner att mina önskemål blev hörda",
+                        displayOrder = 3
+                    ),
+                    SurveyQuestion(
+                        questionKey = "RETURN",
+                        textFi = "Haluaisin tulla uudelleen",
+                        textEn = "I would like to come again",
+                        textSv = "Jag skulle vilja komma igen",
+                        displayOrder = 4
+                    )
+                )
+                repository.insertQuestions(defaultQuestions)
+            }
+        }
+    }
+
+    fun updateLanguage(lang: String) {
+        _uiState.update { it.copy(selectedLanguage = lang) }
+    }
 
     fun updateNpsRating(rating: Int) {
         _uiState.update { it.copy(npsRating = rating) }
@@ -49,13 +96,9 @@ class FeedbackViewModel(private val repository: FeedbackRepository) : ViewModel(
 
     fun updateDetailedRating(index: Int, rating: Int) {
         _uiState.update { state ->
-            when (index) {
-                0 -> state.copy(accessibilityRating = rating)
-                1 -> state.copy(fluencyRating = rating)
-                2 -> state.copy(heardRating = rating)
-                3 -> state.copy(returnRating = rating)
-                else -> state
-            }
+            val updatedMap = state.detailedRatings.toMutableMap()
+            updatedMap[index] = rating
+            state.copy(detailedRatings = updatedMap)
         }
     }
 
@@ -72,14 +115,42 @@ class FeedbackViewModel(private val repository: FeedbackRepository) : ViewModel(
         val feedback = Feedback(
             npsRating = state.npsRating,
             service = state.selectedService,
-            accessibilityRating = state.accessibilityRating,
-            fluencyRating = state.fluencyRating,
-            heardRating = state.heardRating,
-            returnRating = state.returnRating,
-            comment = state.comment
+            accessibilityRating = state.detailedRatings[0] ?: 0,
+            fluencyRating = state.detailedRatings[1] ?: 0,
+            heardRating = state.detailedRatings[2] ?: 0,
+            returnRating = state.detailedRatings[3] ?: 0,
+            comment = state.comment,
+            languageUsed = state.selectedLanguage,
+            timestamp = System.currentTimeMillis()
         )
+
         viewModelScope.launch {
-            repository.insertFeedback(feedback)
+            val feedbackId = repository.insertFeedback(feedback)
+            val currentQuestions = repository.getAllQuestions().first().distinctBy { it.questionKey }
+
+            val answerList = mutableListOf<FeedbackAnswer>()
+            for (i in currentQuestions.indices) {
+                val rating = state.detailedRatings[i] ?: 0
+                if (rating > 0) {
+                    val question = currentQuestions[i]
+                    val qText = when (state.selectedLanguage) {
+                        "EN" -> question.textEn.ifEmpty { question.textFi }
+                        "SV" -> question.textSv.ifEmpty { question.textFi }
+                        else -> question.textFi
+                    }
+                    answerList.add(
+                        FeedbackAnswer(
+                            feedbackId = feedbackId,
+                            questionId = question.id,
+                            questionTextSnapshot = qText,
+                            rating = rating
+                        )
+                    )
+                }
+            }
+            if (answerList.isNotEmpty()) {
+                repository.insertFeedbackAnswers(answerList)
+            }
         }
     }
 
@@ -108,17 +179,75 @@ class FeedbackViewModel(private val repository: FeedbackRepository) : ViewModel(
         }
     }
 
-    // CSV Data Exporter
-    fun generateCsvContent(feedbackList: List<Feedback>): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val sb = StringBuilder()
-        sb.append("ID,Päivämäärä,Palvelu,NPS_Arvio,Saatavuus,Sujuvuus,Kuulluksi_Tuleminen,Uudelleentulo,Palaute_Kommentti\n")
+    fun addQuestion(textFi: String, textEn: String, textSv: String) {
+        viewModelScope.launch {
+            val currentList = surveyQuestions.value
+            val nextOrder = (currentList.maxOfOrNull { it.displayOrder } ?: 0) + 1
+            val newQuestion = SurveyQuestion(
+                questionKey = "QUESTION_${System.currentTimeMillis()}",
+                textFi = textFi,
+                textEn = textEn,
+                textSv = textSv,
+                displayOrder = nextOrder
+            )
+            repository.insertQuestion(newQuestion)
+        }
+    }
 
+    fun deleteQuestion(question: SurveyQuestion) {
+        viewModelScope.launch {
+            repository.deleteQuestion(question)
+        }
+    }
+
+    // CSV Data Exporter (Wide Format - 1 Clean Row Per Submission)
+    suspend fun generateCsvContent(feedbackList: List<Feedback>): String {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val freshAnswers = repository.getAllAnswersDirect()
+        val answersMap = freshAnswers.groupBy { it.feedbackId }
+        val currentQuestions = repository.getAllQuestions().first().distinctBy { it.questionKey }
+
+        val sb = StringBuilder()
+
+        // Header
+        sb.append("Palaute_ID,Päivämäärä,Kieli,Palvelu,NPS_Arvio")
+        for (i in currentQuestions.indices) {
+            val q = currentQuestions[i]
+            val cleanQText = q.textFi.replace("\n", " ").replace(",", ";")
+            sb.append(",\"K${i + 1}: $cleanQText\"")
+        }
+        sb.append(",Kommentti\n")
+
+        // Rows
         for (item in feedbackList) {
             val dateStr = dateFormat.format(Date(item.timestamp))
             val cleanComment = item.comment.replace("\n", " ").replace(",", ";")
             val cleanService = item.service.replace(",", ";")
-            sb.append("${item.id},\"$dateStr\",\"$cleanService\",${item.npsRating},${item.accessibilityRating},${item.fluencyRating},${item.heardRating},${item.returnRating},\"$cleanComment\"\n")
+
+            sb.append("${item.id},\"$dateStr\",\"${item.languageUsed}\",\"$cleanService\",${item.npsRating}")
+
+            val itemAnswers = answersMap[item.id]
+            for (i in currentQuestions.indices) {
+                val q = currentQuestions[i]
+                val ans = itemAnswers?.find {
+                    it.questionId == q.id ||
+                    it.questionTextSnapshot.equals(q.textFi, ignoreCase = true) ||
+                    it.questionTextSnapshot.equals(q.textEn, ignoreCase = true) ||
+                    it.questionTextSnapshot.equals(q.textSv, ignoreCase = true)
+                } ?: itemAnswers?.find { it.questionId == (i + 1) }
+
+                val rating = when {
+                    ans != null -> ans.rating.toString()
+                    (i == 0) && (item.accessibilityRating > 0) -> item.accessibilityRating.toString()
+                    (i == 1) && (item.fluencyRating > 0) -> item.fluencyRating.toString()
+                    (i == 2) && (item.heardRating > 0) -> item.heardRating.toString()
+                    (i == 3) && (item.returnRating > 0) -> item.returnRating.toString()
+                    else -> ""
+                }
+                sb.append(",$rating")
+            }
+
+            sb.append(",\"$cleanComment\"\n")
         }
         return sb.toString()
     }

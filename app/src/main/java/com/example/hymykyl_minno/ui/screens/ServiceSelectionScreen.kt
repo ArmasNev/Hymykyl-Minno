@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hymykyl_minno.ui.components.FeedbackLayout
+import com.example.hymykyl_minno.ui.localization.AppStrings
 import com.example.hymykyl_minno.ui.theme.MainOrange
 import com.example.hymykyl_minno.ui.theme.TextDark
 import com.example.hymykyl_minno.ui.viewmodel.AppViewModelProvider
@@ -28,6 +29,7 @@ fun ServiceSelectionScreen(
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lang = uiState.selectedLanguage
     val services = listOf(
         "Suun terveydenhuolto", "Fysioterapia & osteopatia",
         "Senioripalvelut", "Perhepalvelut",
@@ -35,7 +37,7 @@ fun ServiceSelectionScreen(
         "Apuvälinepalvelut", "Matalan kynnyksen palvelut"
     )
 
-    FeedbackLayout {
+    FeedbackLayout(selectedLanguage = lang) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -46,20 +48,13 @@ fun ServiceSelectionScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Vaihe 2 / 4", color = Color.Gray, fontSize = 16.sp)
-                Row {
-                    Text(text = "FI", fontWeight = FontWeight.Bold, color = MainOrange)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = "EN", color = Color.Gray)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = "SV", color = Color.Gray)
-                }
+                Text(text = AppStrings.stepIndicator(2, lang), color = Color.Gray, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(48.dp))
 
             Text(
-                text = "Mitä palvelua käytit?",
+                text = AppStrings.serviceTitle(lang),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextDark
@@ -74,20 +69,23 @@ fun ServiceSelectionScreen(
                 modifier = Modifier.weight(1f)
             ) {
                 items(services) { service ->
+                    val isSelected = uiState.selectedService == service
+                    val label = AppStrings.localizedServiceName(service, lang)
+
                     OutlinedButton(
                         onClick = { viewModel.updateService(service) },
                         modifier = Modifier.height(64.dp),
                         shape = MaterialTheme.shapes.medium,
                         border = BorderStroke(
                             1.dp,
-                            if (uiState.selectedService == service) MainOrange else Color.LightGray
+                            if (isSelected) MainOrange else Color.LightGray
                         ),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = if (uiState.selectedService == service) MainOrange.copy(alpha = 0.1f) else Color.White
+                            containerColor = if (isSelected) MainOrange.copy(alpha = 0.1f) else Color.White
                         )
                     ) {
                         Text(
-                            text = service,
+                            text = label,
                             color = TextDark,
                             fontSize = 16.sp,
                             modifier = Modifier.fillMaxWidth(),
@@ -103,10 +101,10 @@ fun ServiceSelectionScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = onBack) {
-                    Text(text = "Takaisin", color = Color.Gray, fontSize = 18.sp)
+                    Text(text = AppStrings.btnBack(lang), color = Color.Gray, fontSize = 18.sp)
                 }
                 TextButton(onClick = onSkip) {
-                    Text(text = "Ohita", color = Color.Gray, fontSize = 18.sp)
+                    Text(text = AppStrings.btnSkip(lang), color = Color.Gray, fontSize = 18.sp)
                 }
                 Button(
                     onClick = onNext,
@@ -116,7 +114,7 @@ fun ServiceSelectionScreen(
                         .width(160.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
                 ) {
-                    Text(text = "Jatka", fontSize = 18.sp, color = Color.White)
+                    Text(text = AppStrings.btnNext(lang), fontSize = 18.sp, color = Color.White)
                 }
             }
         }

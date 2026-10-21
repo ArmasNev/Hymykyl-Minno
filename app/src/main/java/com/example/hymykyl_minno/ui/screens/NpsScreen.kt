@@ -11,7 +11,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hymykyl_minno.ui.components.FeedbackLayout
+import com.example.hymykyl_minno.ui.components.LanguageSelector
 import com.example.hymykyl_minno.ui.components.SmileyRatingBar
+import com.example.hymykyl_minno.ui.localization.AppStrings
 import com.example.hymykyl_minno.ui.theme.MainOrange
 import com.example.hymykyl_minno.ui.theme.TextDark
 import com.example.hymykyl_minno.ui.viewmodel.AppViewModelProvider
@@ -24,8 +26,12 @@ fun NpsScreen(
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lang = uiState.selectedLanguage
 
-    FeedbackLayout(onAdminAccessRequested = onAdminAccess) {
+    FeedbackLayout(
+        selectedLanguage = lang,
+        onAdminAccessRequested = onAdminAccess
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -37,21 +43,17 @@ fun NpsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Vaihe 1 / 4", color = Color.Gray, fontSize = 16.sp)
-                // Language selector placeholder
-                Row {
-                    Text(text = "FI", fontWeight = FontWeight.Bold, color = MainOrange)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = "EN", color = Color.Gray)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = "SV", color = Color.Gray)
-                }
+                Text(text = AppStrings.stepIndicator(1, lang), color = Color.Gray, fontSize = 16.sp)
+                LanguageSelector(
+                    selectedLanguage = lang,
+                    onLanguageSelected = { viewModel.updateLanguage(it) }
+                )
             }
 
             Spacer(modifier = Modifier.height(48.dp))
 
             Text(
-                text = "Kuinka todennäköisesti suosittelisit HyMy-kylän palveluita?",
+                text = AppStrings.npsTitle(lang),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextDark
@@ -71,8 +73,8 @@ fun NpsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "En lainkaan", color = Color.Gray)
-                    Text(text = "Erittäin todennäköisesti", color = Color.Gray)
+                    Text(text = AppStrings.npsNotAtAll(lang), color = Color.Gray)
+                    Text(text = AppStrings.npsExtremelyLikely(lang), color = Color.Gray)
                 }
             }
 
@@ -87,7 +89,7 @@ fun NpsScreen(
                     .width(160.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
             ) {
-                Text(text = "Jatka", fontSize = 18.sp, color = Color.White)
+                Text(text = AppStrings.btnNext(lang), fontSize = 18.sp, color = Color.White)
             }
         }
     }

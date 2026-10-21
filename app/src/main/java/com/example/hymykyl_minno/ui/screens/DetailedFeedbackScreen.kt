@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hymykyl_minno.ui.components.FeedbackLayout
 import com.example.hymykyl_minno.ui.components.FiveSmileyRatingBar
+import com.example.hymykyl_minno.ui.localization.AppStrings
 import com.example.hymykyl_minno.ui.theme.*
 import com.example.hymykyl_minno.ui.viewmodel.AppViewModelProvider
 import com.example.hymykyl_minno.ui.viewmodel.FeedbackViewModel
@@ -34,26 +35,31 @@ fun DetailedFeedbackScreen(
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lang = uiState.selectedLanguage
     val dbQuestions by viewModel.surveyQuestions.collectAsState()
+
     val fallbackQuestions = listOf(
         "Palvelut olivat helposti saatavilla",
         "Palvelukokemus oli mielestäni viihtyisä ja sujuva",
         "Koen saaneeni toiveeni tarvittaessa kuulluksi",
         "Haluaisin tulla uudelleen"
     )
-    val questions = if (dbQuestions.isNotEmpty()) dbQuestions.map { it.textFi } else fallbackQuestions
-    val ratings = listOf(
-        uiState.accessibilityRating,
-        uiState.fluencyRating,
-        uiState.heardRating,
-        uiState.returnRating
-    )
+
+    val questions = if (dbQuestions.isNotEmpty()) {
+        dbQuestions.map { q ->
+            when (lang) {
+                "EN" -> q.textEn.ifEmpty { q.textFi }
+                "SV" -> q.textSv.ifEmpty { q.textFi }
+                else -> q.textFi
+            }
+        }
+    } else fallbackQuestions
 
     var activeQuestionIndex by remember { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    FeedbackLayout {
+    FeedbackLayout(selectedLanguage = lang) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -66,20 +72,14 @@ fun DetailedFeedbackScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Vaihe 3 / 4", color = Color.Gray, fontSize = 16.sp)
-                    Row {
-                        Text(text = "FI", fontWeight = FontWeight.Bold, color = MainOrange)
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = "EN", color = Color.Gray)
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = "SV", color = Color.Gray)
-                    }
+                    Text(text = AppStrings.stepIndicator(3, lang), color = Color.Gray, fontSize = 16.sp)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                val serviceLocalized = AppStrings.localizedServiceName(uiState.selectedService, lang)
                 Text(
-                    text = "Vielä muutama kysymys palvelusta ${uiState.selectedService}.",
+                    text = AppStrings.detailedTitle(serviceLocalized, lang),
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextDark
@@ -90,21 +90,20 @@ fun DetailedFeedbackScreen(
 
             // Scrollable Content area with fixed-position active item logic
             Box(modifier = Modifier.weight(1f)) {
-                // Large top/bottom padding ensures items can move freely off-screen or stay in position
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(top = 180.dp, bottom = 300.dp)
                 ) {
                     itemsIndexed(questions) { index, question ->
+                        val currentRating = uiState.detailedRatings[index] ?: 0
                         QuestionItem(
                             question = question,
-                            rating = ratings[index],
+                            rating = currentRating,
                             isActive = activeQuestionIndex == index,
                             onActivate = {
                                 activeQuestionIndex = index
                                 coroutineScope.launch {
-                                    // Scroll so the activated item moves to the exact same top position
                                     listState.animateScrollToItem(index = index, scrollOffset = -200)
                                 }
                             },
@@ -115,11 +114,9 @@ fun DetailedFeedbackScreen(
                                     activeQuestionIndex = nextIndex
                                     coroutineScope.launch {
                                         delay(100)
-                                        // Scroll the next question into the stationary active slot
                                         listState.animateScrollToItem(index = nextIndex, scrollOffset = -200)
                                     }
                                 } else {
-                                    // Last question answered: collapse it into the completed summary queue
                                     activeQuestionIndex = -1
                                     coroutineScope.launch {
                                         delay(100)
@@ -145,20 +142,20 @@ fun DetailedFeedbackScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = onBack) {
-                    Text(text = "Takaisin", color = Color.Gray, fontSize = 18.sp)
+                    Text(text = AppStrings.btnBack(lang), color = Color.Gray, fontSize = 18.sp)
                 }
                 TextButton(onClick = onSkip) {
-                    Text(text = "Ohita", color = Color.Gray, fontSize = 18.sp)
+                    Text(text = AppStrings.btnSkip(lang), color = Color.Gray, fontSize = 18.sp)
                 }
                 Button(
                     onClick = onNext,
-                    enabled = ratings.all { it > 0 },
+                    enabled = questions.indices.all { i -> (uiState.detailedRatings[i] ?: 0) > 0 },
                     modifier = Modifier
                         .height(56.dp)
                         .width(160.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
                 ) {
-                    Text(text = "Jatka", fontSize = 18.sp, color = Color.White)
+                    Text(text = AppStrings.btnNext(lang), fontSize = 18.sp, color = Color.White)
                 }
             }
         }

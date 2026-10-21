@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hymykyl_minno.ui.components.FeedbackLayout
+import com.example.hymykyl_minno.ui.localization.AppStrings
 import com.example.hymykyl_minno.ui.theme.MainOrange
 import com.example.hymykyl_minno.ui.theme.TextDark
 import com.example.hymykyl_minno.ui.viewmodel.AppViewModelProvider
@@ -33,10 +34,11 @@ fun CommentScreen(
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lang = uiState.selectedLanguage
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    FeedbackLayout {
+    FeedbackLayout(selectedLanguage = lang) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -53,27 +55,20 @@ fun CommentScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Vaihe 4 / 4", color = Color.Gray, fontSize = 16.sp)
-                Row {
-                    Text(text = "FI", fontWeight = FontWeight.Bold, color = MainOrange)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = "EN", color = Color.Gray)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = "SV", color = Color.Gray)
-                }
+                Text(text = AppStrings.stepIndicator(4, lang), color = Color.Gray, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Haluatko kertoa jotain muuta?",
+                text = AppStrings.commentTitle(lang),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextDark
             )
 
             Text(
-                text = "Vapaaehtoinen — kerro mikä jäi mieleen, mitä voisi parantaa tai muita ajatuksia.",
+                text = AppStrings.commentSubtitle(lang),
                 color = Color.Gray,
                 fontSize = 16.sp
             )
@@ -86,7 +81,7 @@ fun CommentScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp),
-                placeholder = { Text(text = "Kirjoita tähän...") },
+                placeholder = { Text(text = AppStrings.commentPlaceholder(lang)) },
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Done
                 ),
@@ -111,7 +106,11 @@ fun CommentScreen(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Muistutus: ethän kirjoita henkilötietoja, kuten nimeä, sähköpostia tai puhelinnumeroa.",
+                    text = when (lang) {
+                        "EN" -> "Reminder: Please do not include personal data like your name, email, or phone number."
+                        "SV" -> "Påminnelse: Vänligen skriv inte personuppgifter som namn, e-post eller telefonnummer."
+                        else -> "Muistutus: ethän kirjoita henkilötietoja, kuten nimeä, sähköpostia tai puhelinnumeroa."
+                    },
                     color = Color(0xFF856404),
                     fontSize = 14.sp
                 )
@@ -125,10 +124,10 @@ fun CommentScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = onBack) {
-                    Text(text = "Takaisin", color = Color.Gray, fontSize = 18.sp)
+                    Text(text = AppStrings.btnBack(lang), color = Color.Gray, fontSize = 18.sp)
                 }
                 TextButton(onClick = onSkip) {
-                    Text(text = "Ohita", color = Color.Gray, fontSize = 18.sp)
+                    Text(text = AppStrings.btnSkip(lang), color = Color.Gray, fontSize = 18.sp)
                 }
                 Button(
                     onClick = {
@@ -142,7 +141,7 @@ fun CommentScreen(
                         .width(200.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
                 ) {
-                    Text(text = "Lähetä palaute", fontSize = 18.sp, color = Color.White)
+                    Text(text = AppStrings.btnSubmit(lang), fontSize = 18.sp, color = Color.White)
                 }
             }
         }
