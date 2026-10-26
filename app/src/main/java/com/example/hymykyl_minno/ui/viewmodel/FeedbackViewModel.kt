@@ -6,6 +6,7 @@ import com.example.hymykyl_minno.data.AdminUser
 import com.example.hymykyl_minno.data.Feedback
 import com.example.hymykyl_minno.data.FeedbackAnswer
 import com.example.hymykyl_minno.data.FeedbackRepository
+import com.example.hymykyl_minno.data.ServiceOption
 import com.example.hymykyl_minno.data.SurveyQuestion
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -44,6 +45,10 @@ class FeedbackViewModel(private val repository: FeedbackRepository) : ViewModel(
         .map { list -> list.distinctBy { it.questionKey } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val serviceOptions: StateFlow<List<ServiceOption>> = repository.getAllServices()
+        .map { list -> list.distinctBy { it.serviceKey } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     init {
         viewModelScope.launch {
             if (repository.getQuestionCount() == 0) {
@@ -78,6 +83,68 @@ class FeedbackViewModel(private val repository: FeedbackRepository) : ViewModel(
                     )
                 )
                 repository.insertQuestions(defaultQuestions)
+            }
+
+            if (repository.getServiceCount() == 0) {
+                val defaultServices = listOf(
+                    ServiceOption(
+                        serviceKey = "SERVICE_1",
+                        textFi = "Suun terveydenhuolto",
+                        textEn = "Oral Health Care",
+                        textSv = "Munhälsovård",
+                        displayOrder = 1
+                    ),
+                    ServiceOption(
+                        serviceKey = "SERVICE_2",
+                        textFi = "Fysioterapia & osteopatia",
+                        textEn = "Physiotherapy & Osteopathy",
+                        textSv = "Fysioterapi & osteopati",
+                        displayOrder = 2
+                    ),
+                    ServiceOption(
+                        serviceKey = "SERVICE_3",
+                        textFi = "Senioripalvelut",
+                        textEn = "Senior Services",
+                        textSv = "Seniortjänster",
+                        displayOrder = 3
+                    ),
+                    ServiceOption(
+                        serviceKey = "SERVICE_4",
+                        textFi = "Perhepalvelut",
+                        textEn = "Family Services",
+                        textSv = "Familjetjänster",
+                        displayOrder = 4
+                    ),
+                    ServiceOption(
+                        serviceKey = "SERVICE_5",
+                        textFi = "Aikuisneuvola",
+                        textEn = "Adult Health Clinic",
+                        textSv = "Vuxenrådgivning",
+                        displayOrder = 5
+                    ),
+                    ServiceOption(
+                        serviceKey = "SERVICE_6",
+                        textFi = "Toimintaterapia",
+                        textEn = "Occupational Therapy",
+                        textSv = "Arbetsterapi",
+                        displayOrder = 6
+                    ),
+                    ServiceOption(
+                        serviceKey = "SERVICE_7",
+                        textFi = "Apuvälinepalvelut",
+                        textEn = "Assistive Device Services",
+                        textSv = "Hjälpmedelstjänster",
+                        displayOrder = 7
+                    ),
+                    ServiceOption(
+                        serviceKey = "SERVICE_8",
+                        textFi = "Matalan kynnyksen palvelut",
+                        textEn = "Low-Threshold Services",
+                        textSv = "Lågsköskeltjänster",
+                        displayOrder = 8
+                    )
+                )
+                repository.insertServices(defaultServices)
             }
         }
     }
@@ -197,6 +264,86 @@ class FeedbackViewModel(private val repository: FeedbackRepository) : ViewModel(
     fun deleteQuestion(question: SurveyQuestion) {
         viewModelScope.launch {
             repository.deleteQuestion(question)
+        }
+    }
+
+    fun moveQuestionUp(question: SurveyQuestion) {
+        viewModelScope.launch {
+            val list = surveyQuestions.value
+            val index = list.indexOfFirst { it.id == question.id }
+            if (index > 0) {
+                val prev = list[index - 1]
+                val tempOrder = question.displayOrder
+                repository.updateQuestion(question.copy(displayOrder = prev.displayOrder))
+                repository.updateQuestion(prev.copy(displayOrder = tempOrder))
+            }
+        }
+    }
+
+    fun moveQuestionDown(question: SurveyQuestion) {
+        viewModelScope.launch {
+            val list = surveyQuestions.value
+            val index = list.indexOfFirst { it.id == question.id }
+            if (index >= 0 && index < list.size - 1) {
+                val next = list[index + 1]
+                val tempOrder = question.displayOrder
+                repository.updateQuestion(question.copy(displayOrder = next.displayOrder))
+                repository.updateQuestion(next.copy(displayOrder = tempOrder))
+            }
+        }
+    }
+
+    // Service Option Management
+    fun updateServiceOption(service: ServiceOption) {
+        viewModelScope.launch {
+            repository.updateService(service)
+        }
+    }
+
+    fun addServiceOption(textFi: String, textEn: String, textSv: String) {
+        viewModelScope.launch {
+            val currentList = serviceOptions.value
+            val nextOrder = (currentList.maxOfOrNull { it.displayOrder } ?: 0) + 1
+            val newService = ServiceOption(
+                serviceKey = "SERVICE_${System.currentTimeMillis()}",
+                textFi = textFi,
+                textEn = textEn,
+                textSv = textSv,
+                displayOrder = nextOrder
+            )
+            repository.insertService(newService)
+        }
+    }
+
+    fun deleteServiceOption(service: ServiceOption) {
+        viewModelScope.launch {
+            repository.deleteService(service)
+        }
+    }
+
+    fun moveServiceUp(service: ServiceOption) {
+        viewModelScope.launch {
+            val list = serviceOptions.value
+            val index = list.indexOfFirst { it.id == service.id }
+            if (index > 0) {
+                val prev = list[index - 1]
+                val tempOrder = service.displayOrder
+                repository.updateService(service.copy(displayOrder = prev.displayOrder))
+                repository.updateService(prev.copy(displayOrder = tempOrder))
+            }
+        }
+    }
+
+    fun moveServiceDown(service: ServiceOption) {
+        viewModelScope.launch {
+            val list = serviceOptions.value
+            val index = list.indexOfFirst { it.id == service.id }
+            if (index >= 0 && index < list.size - 1) {
+                val next = list[index + 1]
+                val tempOrder = service.displayOrder
+                repository.updateService(service.copy(displayOrder = next.displayOrder))
+                repository.updateService(next.copy(displayOrder = tempOrder))
+            }
         }
     }
 

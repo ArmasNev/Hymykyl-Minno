@@ -30,12 +30,7 @@ fun ServiceSelectionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lang = uiState.selectedLanguage
-    val services = listOf(
-        "Suun terveydenhuolto", "Fysioterapia & osteopatia",
-        "Senioripalvelut", "Perhepalvelut",
-        "Aikuisneuvola", "Toimintaterapia",
-        "Apuvälinepalvelut", "Matalan kynnyksen palvelut"
-    )
+    val dbServices by viewModel.serviceOptions.collectAsState()
 
     FeedbackLayout(selectedLanguage = lang) {
         Column(
@@ -68,12 +63,17 @@ fun ServiceSelectionScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                items(services) { service ->
-                    val isSelected = uiState.selectedService == service
-                    val label = AppStrings.localizedServiceName(service, lang)
+                items(dbServices) { s ->
+                    val canonicalName = s.textFi
+                    val label = when (lang) {
+                        "EN" -> s.textEn.ifEmpty { s.textFi }
+                        "SV" -> s.textSv.ifEmpty { s.textFi }
+                        else -> s.textFi
+                    }
+                    val isSelected = uiState.selectedService == canonicalName
 
                     OutlinedButton(
-                        onClick = { viewModel.updateService(service) },
+                        onClick = { viewModel.updateService(canonicalName) },
                         modifier = Modifier.height(64.dp),
                         shape = MaterialTheme.shapes.medium,
                         border = BorderStroke(

@@ -6,7 +6,8 @@ class FeedbackRepository(
     private val feedbackDao: FeedbackDao,
     private val adminUserDao: AdminUserDao,
     private val surveyQuestionDao: SurveyQuestionDao,
-    private val feedbackAnswerDao: FeedbackAnswerDao
+    private val feedbackAnswerDao: FeedbackAnswerDao,
+    private val serviceOptionDao: ServiceOptionDao
 ) {
     // Feedback Header
     suspend fun insertFeedback(feedback: Feedback): Long = feedbackDao.insertFeedback(feedback)
@@ -29,4 +30,12 @@ class FeedbackRepository(
     suspend fun insertQuestions(questions: List<SurveyQuestion>) = surveyQuestionDao.insertQuestions(questions)
     suspend fun deleteQuestion(question: SurveyQuestion) = surveyQuestionDao.deleteQuestion(question)
     suspend fun getQuestionCount() = surveyQuestionDao.getQuestionCount()
+
+    // Service Options
+    fun getAllServices(): Flow<List<ServiceOption>> = serviceOptionDao.getAllServices()
+    suspend fun updateService(service: ServiceOption) = serviceOptionDao.updateService(service)
+    suspend fun insertService(service: ServiceOption) = serviceOptionDao.insertService(service)
+    suspend fun insertServices(services: List<ServiceOption>) = serviceOptionDao.insertServices(services)
+    suspend fun deleteService(service: ServiceOption) = serviceOptionDao.deleteService(service)
+    suspend fun getServiceCount() = serviceOptionDao.getServiceCount()
 }

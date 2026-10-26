@@ -16,6 +16,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.hymykyl_minno.data.ServiceOption
 import com.example.hymykyl_minno.data.SurveyQuestion
 import com.example.hymykyl_minno.ui.components.FeedbackLayout
 import com.example.hymykyl_minno.ui.theme.MainOrange
@@ -46,11 +49,16 @@ fun AdminDashboardScreen(
     val coroutineScope = rememberCoroutineScope()
     val feedbackList by viewModel.allFeedback.collectAsState()
     val questions by viewModel.surveyQuestions.collectAsState()
+    val services by viewModel.serviceOptions.collectAsState()
 
-    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Export, 1 = Kysymykset
+    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Export, 1 = Kysymykset, 2 = Palvelut
     var editingQuestion by remember { mutableStateOf<SurveyQuestion?>(null) }
     var deletingQuestion by remember { mutableStateOf<SurveyQuestion?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
+
+    var editingService by remember { mutableStateOf<ServiceOption?>(null) }
+    var deletingService by remember { mutableStateOf<ServiceOption?>(null) }
+    var showAddServiceDialog by remember { mutableStateOf(false) }
 
     FeedbackLayout {
         Column(
@@ -91,7 +99,12 @@ fun AdminDashboardScreen(
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Kysymysten hallinta (${questions.size} kysymystä)") }
+                    text = { Text("Kysymysten hallinta (${questions.size})") }
+                )
+                Tab(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    text = { Text("Palveluiden hallinta (${services.size})") }
                 )
             }
 
@@ -227,10 +240,101 @@ fun AdminDashboardScreen(
                                         }
 
                                         Row {
+                                            IconButton(
+                                                onClick = { viewModel.moveQuestionUp(q) },
+                                                enabled = q != questions.firstOrNull()
+                                            ) {
+                                                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Siirrä ylös", tint = Color.Gray)
+                                            }
+                                            IconButton(
+                                                onClick = { viewModel.moveQuestionDown(q) },
+                                                enabled = q != questions.lastOrNull()
+                                            ) {
+                                                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Siirrä alas", tint = Color.Gray)
+                                            }
                                             IconButton(onClick = { editingQuestion = q }) {
                                                 Icon(Icons.Default.Edit, contentDescription = "Muokkaa", tint = MainOrange)
                                             }
                                             IconButton(onClick = { deletingQuestion = q }) {
+                                                Icon(Icons.Default.Delete, contentDescription = "Poista", tint = MaterialTheme.colorScheme.error)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                2 -> {
+                    // Services Tab
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Kyselyvaiheen 2 palveluvaihtoehdot",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDark
+                            )
+
+                            Button(
+                                onClick = { showAddServiceDialog = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Lisää uusi palvelu", color = Color.White)
+                            }
+                        }
+
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(services) { s ->
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(text = "FI: ${s.textFi}", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextDark)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(text = "EN: ${s.textEn}", fontSize = 14.sp, color = Color.Gray)
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(text = "SV: ${s.textSv}", fontSize = 14.sp, color = Color.Gray)
+                                        }
+
+                                        Row {
+                                            IconButton(
+                                                onClick = { viewModel.moveServiceUp(s) },
+                                                enabled = s != services.firstOrNull()
+                                            ) {
+                                                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Siirrä ylös", tint = Color.Gray)
+                                            }
+                                            IconButton(
+                                                onClick = { viewModel.moveServiceDown(s) },
+                                                enabled = s != services.lastOrNull()
+                                            ) {
+                                                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Siirrä alas", tint = Color.Gray)
+                                            }
+                                            IconButton(onClick = { editingService = s }) {
+                                                Icon(Icons.Default.Edit, contentDescription = "Muokkaa", tint = MainOrange)
+                                            }
+                                            IconButton(onClick = { deletingService = s }) {
                                                 Icon(Icons.Default.Delete, contentDescription = "Poista", tint = MaterialTheme.colorScheme.error)
                                             }
                                         }
@@ -370,6 +474,138 @@ fun AdminDashboardScreen(
             },
             dismissButton = {
                 TextButton(onClick = { deletingQuestion = null }) {
+                    Text("Peruuta")
+                }
+            }
+        )
+    }
+
+    // Add New Service Dialog
+    if (showAddServiceDialog) {
+        var textFi by remember { mutableStateOf("") }
+        var textEn by remember { mutableStateOf("") }
+        var textSv by remember { mutableStateOf("") }
+
+        AlertDialog(
+            onDismissRequest = { showAddServiceDialog = false },
+            title = { Text("Lisää uusi palvelu (3 kieltä)") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = textFi,
+                        onValueChange = { textFi = it },
+                        label = { Text("Suomi (FI)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = textEn,
+                        onValueChange = { textEn = it },
+                        label = { Text("Englanti (EN)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = textSv,
+                        onValueChange = { textSv = it },
+                        label = { Text("Ruotsi (SV)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (textFi.isNotBlank()) {
+                            viewModel.addServiceOption(
+                                textFi = textFi.trim(),
+                                textEn = textEn.trim().ifEmpty { textFi.trim() },
+                                textSv = textSv.trim().ifEmpty { textFi.trim() }
+                            )
+                            showAddServiceDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                ) {
+                    Text("Lisää")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddServiceDialog = false }) {
+                    Text("Peruuta")
+                }
+            }
+        )
+    }
+
+    // Edit Service Dialog
+    editingService?.let { s ->
+        var textFi by remember { mutableStateOf(s.textFi) }
+        var textEn by remember { mutableStateOf(s.textEn) }
+        var textSv by remember { mutableStateOf(s.textSv) }
+
+        AlertDialog(
+            onDismissRequest = { editingService = null },
+            title = { Text("Muokkaa palvelua (3 kieltä)") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = textFi,
+                        onValueChange = { textFi = it },
+                        label = { Text("Suomi (FI)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = textEn,
+                        onValueChange = { textEn = it },
+                        label = { Text("Englanti (EN)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = textSv,
+                        onValueChange = { textSv = it },
+                        label = { Text("Ruotsi (SV)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val updated = s.copy(textFi = textFi, textEn = textEn, textSv = textSv)
+                        viewModel.updateServiceOption(updated)
+                        editingService = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                ) {
+                    Text("Tallenna")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { editingService = null }) {
+                    Text("Peruuta")
+                }
+            }
+        )
+    }
+
+    // Delete Service Confirmation Dialog
+    deletingService?.let { s ->
+        AlertDialog(
+            onDismissRequest = { deletingService = null },
+            title = { Text("Poista palvelu?") },
+            text = { Text("Haluatko varmasti poistaa palvelun: \"${s.textFi}\"?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteServiceOption(s)
+                        deletingService = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Poista", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deletingService = null }) {
                     Text("Peruuta")
                 }
             }

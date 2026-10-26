@@ -10,8 +10,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [Feedback::class, AdminUser::class, SurveyQuestion::class, FeedbackAnswer::class],
-    version = 3,
+    entities = [Feedback::class, AdminUser::class, SurveyQuestion::class, FeedbackAnswer::class, ServiceOption::class],
+    version = 4,
     exportSchema = false
 )
 abstract class FeedbackDatabase : RoomDatabase() {
@@ -19,6 +19,7 @@ abstract class FeedbackDatabase : RoomDatabase() {
     abstract fun adminUserDao(): AdminUserDao
     abstract fun surveyQuestionDao(): SurveyQuestionDao
     abstract fun feedbackAnswerDao(): FeedbackAnswerDao
+    abstract fun serviceOptionDao(): ServiceOptionDao
 
     companion object {
         @Volatile
@@ -40,6 +41,7 @@ abstract class FeedbackDatabase : RoomDatabase() {
                 Instance?.let { database ->
                     CoroutineScope(Dispatchers.IO).launch {
                         populateDefaultQuestions(database.surveyQuestionDao())
+                        populateDefaultServices(database.serviceOptionDao())
                     }
                 }
             }
@@ -77,6 +79,70 @@ abstract class FeedbackDatabase : RoomDatabase() {
                         )
                     )
                     dao.insertQuestions(defaultQuestions)
+                }
+            }
+
+            private suspend fun populateDefaultServices(dao: ServiceOptionDao) {
+                if (dao.getServiceCount() == 0) {
+                    val defaultServices = listOf(
+                        ServiceOption(
+                            serviceKey = "SERVICE_1",
+                            textFi = "Suun terveydenhuolto",
+                            textEn = "Oral Health Care",
+                            textSv = "Munhälsovård",
+                            displayOrder = 1
+                        ),
+                        ServiceOption(
+                            serviceKey = "SERVICE_2",
+                            textFi = "Fysioterapia & osteopatia",
+                            textEn = "Physiotherapy & Osteopathy",
+                            textSv = "Fysioterapi & osteopati",
+                            displayOrder = 2
+                        ),
+                        ServiceOption(
+                            serviceKey = "SERVICE_3",
+                            textFi = "Senioripalvelut",
+                            textEn = "Senior Services",
+                            textSv = "Seniortjänster",
+                            displayOrder = 3
+                        ),
+                        ServiceOption(
+                            serviceKey = "SERVICE_4",
+                            textFi = "Perhepalvelut",
+                            textEn = "Family Services",
+                            textSv = "Familjetjänster",
+                            displayOrder = 4
+                        ),
+                        ServiceOption(
+                            serviceKey = "SERVICE_5",
+                            textFi = "Aikuisneuvola",
+                            textEn = "Adult Health Clinic",
+                            textSv = "Vuxenrådgivning",
+                            displayOrder = 5
+                        ),
+                        ServiceOption(
+                            serviceKey = "SERVICE_6",
+                            textFi = "Toimintaterapia",
+                            textEn = "Occupational Therapy",
+                            textSv = "Arbetsterapi",
+                            displayOrder = 6
+                        ),
+                        ServiceOption(
+                            serviceKey = "SERVICE_7",
+                            textFi = "Apuvälinepalvelut",
+                            textEn = "Assistive Device Services",
+                            textSv = "Hjälpmedelstjänster",
+                            displayOrder = 7
+                        ),
+                        ServiceOption(
+                            serviceKey = "SERVICE_8",
+                            textFi = "Matalan kynnyksen palvelut",
+                            textEn = "Low-Threshold Services",
+                            textSv = "Lågsköskeltjänster",
+                            displayOrder = 8
+                        )
+                    )
+                    dao.insertServices(defaultServices)
                 }
             }
         }
