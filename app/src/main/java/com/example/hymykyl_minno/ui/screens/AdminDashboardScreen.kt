@@ -189,7 +189,60 @@ fun AdminDashboardScreen(
 
                 1 -> {
                     // Questions Tab
+                    val uiState by viewModel.uiState.collectAsState()
                     Column(modifier = Modifier.weight(1f)) {
+                        // Animation A/B Testing Selection Card
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF9E5)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = "Animaatiotyyli",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = TextDark
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Valitse vaiheen 3 kysymysanimaation tyyli:",
+                                    fontSize = 13.sp,
+                                    color = Color.Gray
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                val currentStyle = uiState.animationStyle
+                                val animOptions = listOf(
+                                    "FADE_EXPAND" to "Pehmeä laajennus",
+                                    "FADE_ONLY" to "Paikallaan pysyvä (Ei liikettä)",
+                                    "SLIDE_HORIZONTAL" to "Sivuttaisliuku (Slide)",
+                                    "SPRING_BOUNCE" to "Joustava (Spring)",
+                                    "INSTANT" to "Välitön"
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    animOptions.forEach { (style, label) ->
+                                        val isSelected = currentStyle == style
+                                        FilterChip(
+                                            selected = isSelected,
+                                            onClick = { viewModel.updateAnimationStyle(style) },
+                                            label = { Text(label, fontSize = 12.sp) },
+                                            colors = FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = MainOrange,
+                                                selectedLabelColor = Color.White
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()

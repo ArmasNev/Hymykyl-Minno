@@ -26,82 +26,93 @@ fun FeedbackLayout(
     onAdminAccessRequested: () -> Unit = {},
     content: @Composable RowScope.() -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundCream)
-    ) {
-        // Orange Sidebar (proportional width so it adapts to any tablet size)
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .weight(0.26f)
-                .background(MainOrange)
-                .padding(32.dp)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.metropolia),
-                    contentDescription = "Metropolia Logo",
-                    modifier = Modifier
-                        .height(50.dp)
-                        .fillMaxWidth()
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onPress = {
-                                    val startTime = System.currentTimeMillis()
-                                    val released = tryAwaitRelease()
-                                    val duration = System.currentTimeMillis() - startTime
-                                    if (released && duration >= 3000L) { // 3-5 sec long press
-                                        onAdminAccessRequested()
-                                    }
-                                }
-                            )
-                        },
-                    contentScale = ContentScale.Fit,
-                    alignment = Alignment.TopStart
-                )
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val isLargeScreen = maxWidth >= 1100.dp
 
-                Text(
-                    text = AppStrings.sidebarTitle(selectedLanguage),
-                    color = Color.White,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 36.sp
-                )
+        val sidebarPadding = if (isLargeScreen) 40.dp else 32.dp
+        val logoHeight = if (isLargeScreen) 58.dp else 48.dp
+        val titleFontSize = if (isLargeScreen) 32.sp else 26.sp
+        val titleLineHeight = if (isLargeScreen) 40.sp else 34.sp
+        val descFontSize = if (isLargeScreen) 15.sp else 13.sp
+        val footerFontSize = if (isLargeScreen) 13.sp else 12.sp
 
-                Column {
-                    Text(
-                        text = AppStrings.sidebarDesc(selectedLanguage),
-                        color = Color.White,
-                        fontSize = 13.sp
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Box(
-                        modifier = Modifier
-                            .height(1.dp)
-                            .fillMaxWidth()
-                            .background(Color.White.copy(alpha = 0.3f))
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "HyMy-kylä · 2026",
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 12.sp
-                    )
-                }
-            }
-        }
-
-        // Main Content Area
         Row(
             modifier = Modifier
-                .fillMaxHeight()
-                .weight(0.74f),
-            content = content
-        )
+                .fillMaxSize()
+                .background(BackgroundCream)
+        ) {
+            // Orange Sidebar (proportional width so it adapts to any tablet size)
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(0.26f)
+                    .background(MainOrange)
+                    .padding(sidebarPadding)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.metropolia),
+                        contentDescription = "Metropolia Logo",
+                        modifier = Modifier
+                            .height(logoHeight)
+                            .fillMaxWidth()
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onPress = {
+                                        val startTime = System.currentTimeMillis()
+                                        val released = tryAwaitRelease()
+                                        val duration = System.currentTimeMillis() - startTime
+                                        if (released && duration >= 3000L) { // 3-5 sec long press
+                                            onAdminAccessRequested()
+                                        }
+                                    }
+                                )
+                            },
+                        contentScale = ContentScale.Fit,
+                        alignment = Alignment.TopStart
+                    )
+
+                    Text(
+                        text = AppStrings.sidebarTitle(selectedLanguage),
+                        color = Color.White,
+                        fontSize = titleFontSize,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = titleLineHeight
+                    )
+
+                    Column {
+                        Text(
+                            text = AppStrings.sidebarDesc(selectedLanguage),
+                            color = Color.White,
+                            fontSize = descFontSize
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Box(
+                            modifier = Modifier
+                                .height(1.dp)
+                                .fillMaxWidth()
+                                .background(Color.White.copy(alpha = 0.3f))
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "HyMy-kylä · 2026",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = footerFontSize
+                        )
+                    }
+                }
+            }
+
+            // Main Content Area
+            Row(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(0.74f),
+                content = content
+            )
+        }
     }
 }

@@ -1,5 +1,7 @@
 package com.example.hymykyl_minno.ui.viewmodel
 
+import android.app.Application
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hymykyl_minno.data.AdminUser
@@ -27,12 +29,22 @@ data class FeedbackUiState(
     val selectedService: String = "",
     val detailedRatings: Map<Int, Int> = emptyMap(),
     val comment: String = "",
-    val isSubmitted: Boolean = false
+    val isSubmitted: Boolean = false,
+    val animationStyle: String = "FADE_EXPAND"
 )
 
-class FeedbackViewModel(private val repository: FeedbackRepository) : ViewModel() {
+class FeedbackViewModel(
+    private val repository: FeedbackRepository,
+    private val application: Application? = null
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(FeedbackUiState())
+    private val prefs by lazy {
+        application?.getSharedPreferences("hymykyla_prefs", Context.MODE_PRIVATE)
+    }
+
+    private val initialAnimStyle = prefs?.getString("ANIMATION_STYLE", "FADE_EXPAND") ?: "FADE_EXPAND"
+
+    private val _uiState = MutableStateFlow(FeedbackUiState(animationStyle = initialAnimStyle))
     val uiState: StateFlow<FeedbackUiState> = _uiState.asStateFlow()
 
     val allFeedback: StateFlow<List<Feedback>> = repository.getAllFeedback()
@@ -153,6 +165,11 @@ class FeedbackViewModel(private val repository: FeedbackRepository) : ViewModel(
         _uiState.update { it.copy(selectedLanguage = lang) }
     }
 
+    fun updateAnimationStyle(style: String) {
+        _uiState.update { it.copy(animationStyle = style) }
+        prefs?.edit()?.putString("ANIMATION_STYLE", style)?.apply()
+    }
+
     fun updateNpsRating(rating: Int) {
         _uiState.update { it.copy(npsRating = rating) }
     }
@@ -222,7 +239,8 @@ class FeedbackViewModel(private val repository: FeedbackRepository) : ViewModel(
     }
 
     fun resetFeedback() {
-        _uiState.value = FeedbackUiState()
+        val currentAnimStyle = _uiState.value.animationStyle
+        _uiState.value = FeedbackUiState(animationStyle = currentAnimStyle)
     }
 
     // Admin Authentication

@@ -1,6 +1,5 @@
 package com.example.hymykyl_minno.ui.viewmodel
 
-import android.app.Application
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
@@ -10,8 +9,10 @@ import com.example.hymykyl_minno.FeedbackApplication
 object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer {
+            val app = feedbackApplication()
             FeedbackViewModel(
-                feedbackApplication().container.feedbackRepository
+                repository = app.container.feedbackRepository,
+                application = app
             )
         }
     }

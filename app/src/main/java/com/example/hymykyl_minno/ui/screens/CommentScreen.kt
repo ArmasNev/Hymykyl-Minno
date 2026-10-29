@@ -39,109 +39,126 @@ fun CommentScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     FeedbackLayout(selectedLanguage = lang) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures {
-                        focusManager.clearFocus()
-                        keyboardController?.hide()
-                    }
-                }
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = AppStrings.stepIndicator(4, lang), color = Color.Gray, fontSize = 16.sp)
-            }
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val isLargeScreen = maxWidth >= 1100.dp
 
-            Spacer(modifier = Modifier.height(32.dp))
+            val titleFontSize = if (isLargeScreen) 36.sp else 28.sp
+            val titleLineHeight = if (isLargeScreen) 44.sp else 36.sp
+            val subtitleFontSize = if (isLargeScreen) 18.sp else 15.sp
+            val stepFontSize = if (isLargeScreen) 17.sp else 15.sp
+            val fieldHeight = if (isLargeScreen) 200.dp else 160.dp
+            val navButtonHeight = if (isLargeScreen) 60.dp else 52.dp
+            val navButtonWidth = if (isLargeScreen) 190.dp else 170.dp
+            val navFontSize = if (isLargeScreen) 19.sp else 17.sp
+            val reminderFontSize = if (isLargeScreen) 15.sp else 13.sp
 
-            Text(
-                text = AppStrings.commentTitle(lang),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextDark
-            )
-
-            Text(
-                text = AppStrings.commentSubtitle(lang),
-                color = Color.Gray,
-                fontSize = 16.sp
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            OutlinedTextField(
-                value = uiState.comment,
-                onValueChange = { viewModel.updateComment(it) },
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp),
-                placeholder = { Text(text = AppStrings.commentPlaceholder(lang)) },
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        focusManager.clearFocus()
-                        keyboardController?.hide()
+                    .fillMaxSize()
+                    .padding(32.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                        }
                     }
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MainOrange,
-                    unfocusedBorderColor = Color.LightGray
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFFFF9E5))
-                    .padding(16.dp)
             ) {
-                Text(
-                    text = when (lang) {
-                        "EN" -> "Reminder: Please do not include personal data like your name, email, or phone number."
-                        "SV" -> "Påminnelse: Vänligen skriv inte personuppgifter som namn, e-post eller telefonnummer."
-                        else -> "Muistutus: ethän kirjoita henkilötietoja, kuten nimeä, sähköpostia tai puhelinnumeroa."
-                    },
-                    color = Color(0xFF856404),
-                    fontSize = 14.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onBack) {
-                    Text(text = AppStrings.btnBack(lang), color = Color.Gray, fontSize = 18.sp)
-                }
-                TextButton(onClick = onSkip) {
-                    Text(text = AppStrings.btnSkip(lang), color = Color.Gray, fontSize = 18.sp)
-                }
-                Button(
-                    onClick = {
-                        focusManager.clearFocus()
-                        keyboardController?.hide()
-                        viewModel.submitFeedback()
-                        onNext()
-                    },
-                    modifier = Modifier
-                        .height(56.dp)
-                        .width(200.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = AppStrings.btnSubmit(lang), fontSize = 18.sp, color = Color.White)
+                    Text(text = AppStrings.stepIndicator(4, lang), color = Color.Gray, fontSize = stepFontSize)
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text = AppStrings.commentTitle(lang),
+                    fontSize = titleFontSize,
+                    lineHeight = titleLineHeight,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = AppStrings.commentSubtitle(lang),
+                    color = Color.Gray,
+                    fontSize = subtitleFontSize
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                OutlinedTextField(
+                    value = uiState.comment,
+                    onValueChange = { viewModel.updateComment(it) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(fieldHeight),
+                    placeholder = { Text(text = AppStrings.commentPlaceholder(lang), fontSize = subtitleFontSize) },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                        }
+                    ),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MainOrange,
+                        unfocusedBorderColor = Color.LightGray
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFFFF9E5))
+                        .padding(14.dp)
+                ) {
+                    Text(
+                        text = when (lang) {
+                            "EN" -> "Reminder: Please do not include personal data like your name, email, or phone number."
+                            "SV" -> "Påminnelse: Vänligen skriv inte personuppgifter som namn, e-post eller telefonnummer."
+                            else -> "Muistutus: ethän kirjoita henkilötietoja, kuten nimeä, sähköpostia tai puhelinnumeroa."
+                        },
+                        color = Color(0xFF856404),
+                        fontSize = reminderFontSize
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onBack) {
+                        Text(text = AppStrings.btnBack(lang), color = Color.Gray, fontSize = navFontSize)
+                    }
+                    TextButton(onClick = onSkip) {
+                        Text(text = AppStrings.btnSkip(lang), color = Color.Gray, fontSize = navFontSize)
+                    }
+                    Button(
+                        onClick = {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                            viewModel.submitFeedback()
+                            onNext()
+                        },
+                        modifier = Modifier
+                            .height(navButtonHeight)
+                            .width(navButtonWidth),
+                        colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                    ) {
+                        Text(text = AppStrings.btnSubmit(lang), fontSize = navFontSize, color = Color.White)
+                    }
                 }
             }
         }
