@@ -15,7 +15,9 @@ enum class FeedbackScreen {
     ServiceSelection,
     DetailedFeedback,
     Comment,
-    ThankYou
+    ThankYou,
+    AdminLogin,
+    AdminDashboard
 }
 
 @Composable
@@ -24,6 +26,8 @@ fun FeedbackNavGraph(
     modifier: Modifier = Modifier,
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
+    val navigateToAdmin = { navController.navigate(FeedbackScreen.AdminLogin.name) }
+
     NavHost(
         navController = navController,
         startDestination = FeedbackScreen.NPS.name,
@@ -32,6 +36,7 @@ fun FeedbackNavGraph(
         composable(route = FeedbackScreen.NPS.name) {
             NpsScreen(
                 onNext = { navController.navigate(FeedbackScreen.ServiceSelection.name) },
+                onAdminAccess = navigateToAdmin,
                 viewModel = viewModel
             )
         }
@@ -71,6 +76,25 @@ fun FeedbackNavGraph(
         composable(route = FeedbackScreen.ThankYou.name) {
             ThankYouScreen(
                 onFinish = {
+                    navController.popBackStack(FeedbackScreen.NPS.name, inclusive = false)
+                },
+                viewModel = viewModel
+            )
+        }
+        composable(route = FeedbackScreen.AdminLogin.name) {
+            AdminLoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(FeedbackScreen.AdminDashboard.name) {
+                        popUpTo(FeedbackScreen.AdminLogin.name) { inclusive = true }
+                    }
+                },
+                onBack = { navController.popBackStack() },
+                viewModel = viewModel
+            )
+        }
+        composable(route = FeedbackScreen.AdminDashboard.name) {
+            AdminDashboardScreen(
+                onLogout = {
                     navController.popBackStack(FeedbackScreen.NPS.name, inclusive = false)
                 },
                 viewModel = viewModel

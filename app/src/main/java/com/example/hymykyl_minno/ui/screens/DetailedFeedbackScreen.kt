@@ -1,6 +1,9 @@
 package com.example.hymykyl_minno.ui.screens
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,10 +23,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hymykyl_minno.ui.components.FeedbackLayout
 import com.example.hymykyl_minno.ui.components.FiveSmileyRatingBar
+import com.example.hymykyl_minno.ui.localization.AppStrings
 import com.example.hymykyl_minno.ui.theme.*
 import com.example.hymykyl_minno.ui.viewmodel.AppViewModelProvider
 import com.example.hymykyl_minno.ui.viewmodel.FeedbackViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -34,129 +37,143 @@ fun DetailedFeedbackScreen(
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val questions = listOf(
+    val lang = uiState.selectedLanguage
+    val animStyle = uiState.animationStyle
+    val dbQuestions by viewModel.surveyQuestions.collectAsState()
+
+    val fallbackQuestions = listOf(
         "Palvelut olivat helposti saatavilla",
         "Palvelukokemus oli mielestäni viihtyisä ja sujuva",
         "Koen saaneeni toiveeni tarvittaessa kuulluksi",
         "Haluaisin tulla uudelleen"
     )
-    val ratings = listOf(
-        uiState.accessibilityRating,
-        uiState.fluencyRating,
-        uiState.heardRating,
-        uiState.returnRating
-    )
+
+    val questions = if (dbQuestions.isNotEmpty()) {
+        dbQuestions.map { q ->
+            when (lang) {
+                "EN" -> q.textEn.ifEmpty { q.textFi }
+                "SV" -> q.textSv.ifEmpty { q.textFi }
+                else -> q.textFi
+            }
+        }
+    } else fallbackQuestions
 
     var activeQuestionIndex by remember { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    FeedbackLayout {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp, vertical = 32.dp)
-        ) {
-            // Header (fixed)
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = "Vaihe 3 / 4", color = Color.Gray, fontSize = 16.sp)
-                    Row {
-                        Text(text = "FI", fontWeight = FontWeight.Bold, color = MainOrange)
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = "EN", color = Color.Gray)
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = "SV", color = Color.Gray)
+    FeedbackLayout(selectedLanguage = lang) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val isLargeScreen = maxWidth >= 1100.dp
+
+            val titleFontSize = if (isLargeScreen) 34.sp else 26.sp
+            val titleLineHeight = if (isLargeScreen) 42.sp else 34.sp
+            val stepFontSize = if (isLargeScreen) 17.sp else 15.sp
+            val navButtonHeight = if (isLargeScreen) 60.dp else 52.dp
+            val navButtonWidth = if (isLargeScreen) 170.dp else 150.dp
+            val navFontSize = if (isLargeScreen) 19.sp else 17.sp
+            val activeQFontSize = if (isLargeScreen) 26.sp else 22.sp
+            val inactiveQFontSize = if (isLargeScreen) 18.sp else 15.sp
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp, vertical = 32.dp)
+            ) {
+                // Header (fixed)
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = AppStrings.stepIndicator(3, lang), color = Color.Gray, fontSize = stepFontSize)
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val serviceLocalized = AppStrings.localizedServiceName(uiState.selectedService, lang)
+                    Text(
+                        text = AppStrings.detailedTitle(serviceLocalized, lang),
+                        fontSize = titleFontSize,
+                        lineHeight = titleLineHeight,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDark
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                Text(
-                    text = "Vielä muutama kysymys palvelusta ${uiState.selectedService}.",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextDark
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Scrollable Content area with fixed-position active item logic
-            Box(modifier = Modifier.weight(1f)) {
-                // Large top/bottom padding ensures items can move freely off-screen or stay in position
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 180.dp, bottom = 300.dp)
-                ) {
-                    itemsIndexed(questions) { index, question ->
-                        QuestionItem(
-                            question = question,
-                            rating = ratings[index],
-                            isActive = activeQuestionIndex == index,
-                            onActivate = {
-                                activeQuestionIndex = index
-                                coroutineScope.launch {
-                                    // Scroll so the activated item moves to the exact same top position
-                                    listState.animateScrollToItem(index = index, scrollOffset = -200)
-                                }
-                            },
-                            onRatingSelected = { rating ->
-                                viewModel.updateDetailedRating(index, rating)
-                                if (index < questions.size - 1) {
-                                    val nextIndex = index + 1
-                                    activeQuestionIndex = nextIndex
+                // Scrollable Content area with fixed-position active item logic (Vertical Center Slot)
+                Box(modifier = Modifier.weight(1f)) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(top = 180.dp, bottom = 300.dp)
+                    ) {
+                        itemsIndexed(questions) { index, question ->
+                            val currentRating = uiState.detailedRatings[index] ?: 0
+                            QuestionItem(
+                                question = question,
+                                rating = currentRating,
+                                isActive = activeQuestionIndex == index,
+                                animationStyle = animStyle,
+                                activeFontSize = activeQFontSize,
+                                inactiveFontSize = inactiveQFontSize,
+                                onActivate = {
+                                    activeQuestionIndex = index
                                     coroutineScope.launch {
-                                        delay(100)
-                                        // Scroll the next question into the stationary active slot
-                                        listState.animateScrollToItem(index = nextIndex, scrollOffset = -200)
+                                        listState.animateScrollToItem(index = index, scrollOffset = -200)
                                     }
-                                } else {
-                                    // Last question answered: collapse it into the completed summary queue
-                                    activeQuestionIndex = -1
-                                    coroutineScope.launch {
-                                        delay(100)
-                                        listState.animateScrollToItem(index = 0, scrollOffset = 0)
+                                },
+                                onRatingSelected = { rating ->
+                                    viewModel.updateDetailedRating(index, rating)
+                                    if (index < questions.size - 1) {
+                                        val nextIndex = index + 1
+                                        activeQuestionIndex = nextIndex
+                                        coroutineScope.launch {
+                                            listState.animateScrollToItem(index = nextIndex, scrollOffset = -200)
+                                        }
+                                    } else {
+                                        activeQuestionIndex = -1
+                                        coroutineScope.launch {
+                                            listState.animateScrollToItem(index = 0, scrollOffset = 0)
+                                        }
                                     }
                                 }
+                            )
+                            if (index < questions.size - 1) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))
+                                Spacer(modifier = Modifier.height(8.dp))
                             }
-                        )
-                        if (index < questions.size - 1) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))
-                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
                 }
-            }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onBack) {
-                    Text(text = "Takaisin", color = Color.Gray, fontSize = 18.sp)
-                }
-                TextButton(onClick = onSkip) {
-                    Text(text = "Ohita", color = Color.Gray, fontSize = 18.sp)
-                }
-                Button(
-                    onClick = onNext,
-                    enabled = ratings.all { it > 0 },
+                Row(
                     modifier = Modifier
-                        .height(56.dp)
-                        .width(160.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Jatka", fontSize = 18.sp, color = Color.White)
+                    TextButton(onClick = onBack) {
+                        Text(text = AppStrings.btnBack(lang), color = Color.Gray, fontSize = navFontSize)
+                    }
+                    TextButton(onClick = onSkip) {
+                        Text(text = AppStrings.btnSkip(lang), color = Color.Gray, fontSize = navFontSize)
+                    }
+                    Button(
+                        onClick = onNext,
+                        enabled = questions.indices.all { i -> (uiState.detailedRatings[i] ?: 0) > 0 },
+                        modifier = Modifier
+                            .height(navButtonHeight)
+                            .width(navButtonWidth),
+                        colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                    ) {
+                        Text(text = AppStrings.btnNext(lang), fontSize = navFontSize, color = Color.White)
+                    }
                 }
             }
         }
@@ -168,9 +185,29 @@ fun QuestionItem(
     question: String,
     rating: Int,
     isActive: Boolean,
+    animationStyle: String = "FADE_EXPAND",
+    activeFontSize: androidx.compose.ui.unit.TextUnit = 22.sp,
+    inactiveFontSize: androidx.compose.ui.unit.TextUnit = 15.sp,
     onActivate: () -> Unit,
     onRatingSelected: (Int) -> Unit
 ) {
+    val duration = 400
+    val enterTransition = when (animationStyle) {
+        "FADE_ONLY" -> fadeIn(animationSpec = tween(400))
+        "SLIDE_HORIZONTAL" -> slideInHorizontally(animationSpec = tween(duration, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(duration))
+        "SPRING_BOUNCE" -> expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow))
+        "INSTANT" -> EnterTransition.None
+        else -> expandVertically(animationSpec = tween(duration, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(duration))
+    }
+
+    val exitTransition = when (animationStyle) {
+        "FADE_ONLY" -> fadeOut(animationSpec = tween(400))
+        "SLIDE_HORIZONTAL" -> slideOutHorizontally(animationSpec = tween(duration, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(duration))
+        "SPRING_BOUNCE" -> shrinkVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow))
+        "INSTANT" -> ExitTransition.None
+        else -> shrinkVertically(animationSpec = tween(duration, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(duration))
+    }
+
     Column {
         Row(
             modifier = Modifier
@@ -182,7 +219,7 @@ fun QuestionItem(
         ) {
             Text(
                 text = question,
-                fontSize = if (isActive) 24.sp else 16.sp,
+                fontSize = if (isActive) activeFontSize else inactiveFontSize,
                 fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
                 color = if (isActive) TextDark else Color.Gray,
                 modifier = Modifier.weight(1f)
@@ -215,16 +252,16 @@ fun QuestionItem(
 
         AnimatedVisibility(
             visible = isActive,
-            enter = expandVertically(animationSpec = tween(200)) + fadeIn(animationSpec = tween(200)),
-            exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200))
+            enter = enterTransition,
+            exit = exitTransition
         ) {
             Column {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 FiveSmileyRatingBar(
                     selectedRating = rating,
                     onRatingSelected = onRatingSelected
                 )
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

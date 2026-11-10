@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface FeedbackDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertFeedback(feedback: Feedback)
+    suspend fun insertFeedback(feedback: Feedback): Long
 
     @Query("SELECT * FROM feedback ORDER BY timestamp DESC")
     fun getAllFeedback(): Flow<List<Feedback>>

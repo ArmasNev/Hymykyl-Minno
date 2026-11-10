@@ -11,7 +11,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hymykyl_minno.ui.components.FeedbackLayout
+import com.example.hymykyl_minno.ui.components.LanguageSelector
 import com.example.hymykyl_minno.ui.components.SmileyRatingBar
+import com.example.hymykyl_minno.ui.localization.AppStrings
 import com.example.hymykyl_minno.ui.theme.MainOrange
 import com.example.hymykyl_minno.ui.theme.TextDark
 import com.example.hymykyl_minno.ui.viewmodel.AppViewModelProvider
@@ -20,73 +22,87 @@ import com.example.hymykyl_minno.ui.viewmodel.FeedbackViewModel
 @Composable
 fun NpsScreen(
     onNext: () -> Unit,
+    onAdminAccess: () -> Unit = {},
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lang = uiState.selectedLanguage
 
-    FeedbackLayout {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp, vertical = 32.dp)
-        ) {
-            // Header with language and progress
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+    FeedbackLayout(
+        selectedLanguage = lang,
+        onAdminAccessRequested = onAdminAccess
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val isLargeScreen = maxWidth >= 1100.dp
+
+            val titleFontSize = if (isLargeScreen) 36.sp else 28.sp
+            val titleLineHeight = if (isLargeScreen) 44.sp else 36.sp
+            val stepFontSize = if (isLargeScreen) 17.sp else 15.sp
+            val navButtonHeight = if (isLargeScreen) 60.dp else 52.dp
+            val navButtonWidth = if (isLargeScreen) 170.dp else 150.dp
+            val navFontSize = if (isLargeScreen) 19.sp else 17.sp
+            val scaleLabelSize = if (isLargeScreen) 16.sp else 14.sp
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp, vertical = 32.dp)
             ) {
-                Text(text = "Vaihe 1 / 4", color = Color.Gray, fontSize = 16.sp)
-                // Language selector placeholder
-                Row {
-                    Text(text = "FI", fontWeight = FontWeight.Bold, color = MainOrange)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = "EN", color = Color.Gray)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = "SV", color = Color.Gray)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            Text(
-                text = "Kuinka todennäköisesti suosittelisit HyMy-kylän palveluita?",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextDark
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Column(modifier = Modifier.fillMaxWidth()) {
-                SmileyRatingBar(
-                    selectedRating = uiState.npsRating,
-                    onRatingSelected = { viewModel.updateNpsRating(it) }
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
+                // Header with language and progress
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "En lainkaan", color = Color.Gray)
-                    Text(text = "Erittäin todennäköisesti", color = Color.Gray)
+                    Text(text = AppStrings.stepIndicator(1, lang), color = Color.Gray, fontSize = stepFontSize)
+                    LanguageSelector(
+                        selectedLanguage = lang,
+                        onLanguageSelected = { viewModel.updateLanguage(it) }
+                    )
                 }
-            }
 
-            Spacer(modifier = Modifier.weight(1.2f))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = onNext,
-                enabled = uiState.npsRating > 0,
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .height(56.dp)
-                    .width(160.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
-            ) {
-                Text(text = "Jatka", fontSize = 18.sp, color = Color.White)
+                Text(
+                    text = AppStrings.npsTitle(lang),
+                    fontSize = titleFontSize,
+                    lineHeight = titleLineHeight,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    SmileyRatingBar(
+                        selectedRating = uiState.npsRating,
+                        onRatingSelected = { viewModel.updateNpsRating(it) }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = AppStrings.npsNotAtAll(lang), color = Color.Gray, fontSize = scaleLabelSize)
+                        Text(text = AppStrings.npsExtremelyLikely(lang), color = Color.Gray, fontSize = scaleLabelSize)
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1.2f))
+
+                Button(
+                    onClick = onNext,
+                    enabled = uiState.npsRating > 0,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .height(navButtonHeight)
+                        .width(navButtonWidth),
+                    colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                ) {
+                    Text(text = AppStrings.btnNext(lang), fontSize = navFontSize, color = Color.White)
+                }
             }
         }
     }
