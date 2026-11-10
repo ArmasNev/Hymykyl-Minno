@@ -81,8 +81,8 @@ private fun RatingItem(
                 .padding(horizontal = 2.dp),
             contentAlignment = Alignment.Center
         ) {
-            val circleSize = maxWidth.coerceAtMost(72.dp)
-            val emojiFontSize = (circleSize.value * 0.62f).sp
+            val circleSize = maxWidth.coerceAtMost(100.dp)
+            val emojiFontSize = (circleSize.value * 0.80f).sp
 
             Box(
                 modifier = Modifier
@@ -109,7 +109,7 @@ private fun RatingItem(
         Text(
             text = rating.toString(),
             color = if (isSelected) TextDark else TextDark.copy(alpha = 0.5f),
-            fontSize = 13.sp,
+            fontSize = 14.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
     }
@@ -167,8 +167,8 @@ private fun FiveRatingItem(
                 .padding(horizontal = 4.dp),
             contentAlignment = Alignment.Center
         ) {
-            val circleSize = maxWidth.coerceAtMost(80.dp)
-            val emojiFontSize = (circleSize.value * 0.62f).sp
+            val circleSize = maxWidth.coerceAtMost(120.dp)
+            val emojiFontSize = (circleSize.value * 0.80f).sp
 
             Box(
                 modifier = Modifier
@@ -195,7 +195,7 @@ private fun FiveRatingItem(
         Text(
             text = rating.toString(),
             color = if (isSelected) TextDark else TextDark.copy(alpha = 0.5f),
-            fontSize = 14.sp,
+            fontSize = 15.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
     }

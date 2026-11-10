@@ -61,255 +61,272 @@ fun AdminDashboardScreen(
     var showAddServiceDialog by remember { mutableStateOf(false) }
 
     FeedbackLayout {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp)
-        ) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
+
+            val headerFontSize = (32 * scaleFactor).sp
+            val tabFontSize = (18 * scaleFactor).sp
+            val cardTitleFontSize = (20 * scaleFactor).sp
+            val cardTextFiFontSize = (18 * scaleFactor).sp
+            val cardTextOtherFontSize = (15 * scaleFactor).sp
+            val iconSize = (28 * scaleFactor).dp
+            val buttonHeight = (60 * scaleFactor).dp
+            val buttonFontSize = (18 * scaleFactor).sp
+            val countFontSize = (22 * scaleFactor).sp
+            val descFontSize = (17 * scaleFactor).sp
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding((32 * scaleFactor).dp)
             ) {
-                Text(
-                    text = "Ylläpitopaneeli",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextDark
-                )
-
-                Button(
-                    onClick = onLogout,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Kirjaudu ulos", color = Color.White)
-                }
-            }
+                    Text(
+                        text = "Ylläpitopaneeli",
+                        fontSize = headerFontSize,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDark
+                    )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Tabs
-            TabRow(selectedTabIndex = selectedTab) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    text = { Text("CSV-Vienti (${feedbackList.size} vastausta)") }
-                )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    text = { Text("Kysymysten hallinta (${questions.size})") }
-                )
-                Tab(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    text = { Text("Palveluiden hallinta (${services.size})") }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            when (selectedTab) {
-                0 -> {
-                    // Export Tab
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Button(
+                        onClick = onLogout,
+                        modifier = Modifier.height((48 * scaleFactor).dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
                     ) {
-                        Text(
-                            text = "Tallennettujen palautteiden määrä: ${feedbackList.size}",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TextDark
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = "Tallenna CSV-tiedosto suoraan laitteen latauskansioon ilman Google-tiliä, tai jaa se eteenpäin.",
-                            color = Color.Gray,
-                            fontSize = 16.sp
-                        )
-
-                        Spacer(modifier = Modifier.height(32.dp))
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Button(
-                                onClick = {
-                                    coroutineScope.launch {
-                                        val csvData = viewModel.generateCsvContent(feedbackList)
-                                        val resultPath = saveCsvToDownloads(context, csvData)
-                                        if (resultPath != null) {
-                                            Toast.makeText(
-                                                context,
-                                                "Tiedosto tallennettu kansioon: $resultPath",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        } else {
-                                            Toast.makeText(
-                                                context,
-                                                "Tallennus epäonnistui",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    }
-                                },
-                                enabled = feedbackList.isNotEmpty(),
-                                modifier = Modifier.height(56.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
-                            ) {
-                                Icon(Icons.Default.Download, contentDescription = null, tint = Color.White)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Tallenna laitteen Lataukset-kansioon", fontSize = 16.sp, color = Color.White)
-                            }
-
-                            OutlinedButton(
-                                onClick = {
-                                    coroutineScope.launch {
-                                        val csvData = viewModel.generateCsvContent(feedbackList)
-                                        shareCsvFile(context, csvData)
-                                    }
-                                },
-                                enabled = feedbackList.isNotEmpty(),
-                                modifier = Modifier.height(56.dp)
-                            ) {
-                                Icon(Icons.Default.Share, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Jaa / Lähetä eteenpäin", fontSize = 16.sp)
-                            }
-                        }
+                        Text("Kirjaudu ulos", color = Color.White, fontSize = (16 * scaleFactor).sp)
                     }
                 }
 
-                1 -> {
-                    // Questions Tab
-                    val uiState by viewModel.uiState.collectAsState()
-                    Column(modifier = Modifier.weight(1f)) {
-                        // Animation A/B Testing Selection Card
-                        Card(
+                Spacer(modifier = Modifier.height((16 * scaleFactor).dp))
+
+                // Tabs
+                TabRow(selectedTabIndex = selectedTab) {
+                    Tab(
+                        selected = selectedTab == 0,
+                        onClick = { selectedTab = 0 },
+                        text = { Text("CSV-Vienti (${feedbackList.size} vastausta)", fontSize = tabFontSize) }
+                    )
+                    Tab(
+                        selected = selectedTab == 1,
+                        onClick = { selectedTab = 1 },
+                        text = { Text("Kysymysten hallinta (${questions.size})", fontSize = tabFontSize) }
+                    )
+                    Tab(
+                        selected = selectedTab == 2,
+                        onClick = { selectedTab = 2 },
+                        text = { Text("Palveluiden hallinta (${services.size})", fontSize = tabFontSize) }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height((24 * scaleFactor).dp))
+
+                when (selectedTab) {
+                    0 -> {
+                        // Export Tab
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF9E5)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                .weight(1f),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "Tallennettujen palautteiden määrä: ${feedbackList.size}",
+                                fontSize = countFontSize,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDark
+                            )
+
+                            Spacer(modifier = Modifier.height((16 * scaleFactor).dp))
+
+                            Text(
+                                text = "Tallenna CSV-tiedosto suoraan laitteen latauskansioon ilman Google-tiliä, tai jaa se eteenpäin.",
+                                color = Color.Gray,
+                                fontSize = descFontSize
+                            )
+
+                            Spacer(modifier = Modifier.height((32 * scaleFactor).dp))
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy((16 * scaleFactor).dp)
+                            ) {
+                                Button(
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            val csvData = viewModel.generateCsvContent(feedbackList)
+                                            val resultPath = saveCsvToDownloads(context, csvData)
+                                            if (resultPath != null) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Tiedosto tallennettu kansioon: $resultPath",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Tallennus epäonnistui",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    },
+                                    enabled = feedbackList.isNotEmpty(),
+                                    modifier = Modifier.height(buttonHeight),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                                ) {
+                                    Icon(Icons.Default.Download, contentDescription = null, tint = Color.White, modifier = Modifier.size(iconSize))
+                                    Spacer(modifier = Modifier.width((8 * scaleFactor).dp))
+                                    Text("Tallenna laitteen Lataukset-kansioon", fontSize = buttonFontSize, color = Color.White)
+                                }
+
+                                OutlinedButton(
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            val csvData = viewModel.generateCsvContent(feedbackList)
+                                            shareCsvFile(context, csvData)
+                                        }
+                                    },
+                                    enabled = feedbackList.isNotEmpty(),
+                                    modifier = Modifier.height(buttonHeight)
+                                ) {
+                                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(iconSize))
+                                    Spacer(modifier = Modifier.width((8 * scaleFactor).dp))
+                                    Text("Jaa / Lähetä eteenpäin", fontSize = buttonFontSize)
+                                }
+                            }
+                        }
+                    }
+
+                    1 -> {
+                        // Questions Tab
+                        val uiState by viewModel.uiState.collectAsState()
+                        Column(modifier = Modifier.weight(1f)) {
+                            // Animation A/B Testing Selection Card
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = (16 * scaleFactor).dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF9E5)),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column(modifier = Modifier.padding((16 * scaleFactor).dp)) {
+                                    Text(
+                                        text = "Animaatiotyyli",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = cardTitleFontSize,
+                                        color = TextDark
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Valitse vaiheen 3 kysymysanimaation tyyli:",
+                                        fontSize = cardTextOtherFontSize,
+                                        color = Color.Gray
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    val currentStyle = uiState.animationStyle
+                                    val animOptions = listOf(
+                                        "FADE_EXPAND" to "Pehmeä laajennus",
+                                        "FADE_ONLY" to "Paikallaan pysyvä (Ei liikettä)",
+                                        "SLIDE_HORIZONTAL" to "Sivuttaisliuku (Slide)",
+                                        "SPRING_BOUNCE" to "Joustava (Spring)",
+                                        "INSTANT" to "Välitön"
+                                    )
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy((8 * scaleFactor).dp)
+                                    ) {
+                                        animOptions.forEach { (style, label) ->
+                                            val isSelected = currentStyle == style
+                                            FilterChip(
+                                                selected = isSelected,
+                                                onClick = { viewModel.updateAnimationStyle(style) },
+                                                label = { Text(label, fontSize = (14 * scaleFactor).sp) },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = MainOrange,
+                                                    selectedLabelColor = Color.White
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = (16 * scaleFactor).dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Text(
-                                    text = "Animaatiotyyli",
+                                    text = "Kyselyvaiheen 3 kysymykset",
+                                    fontSize = cardTitleFontSize,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
                                     color = TextDark
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Valitse vaiheen 3 kysymysanimaation tyyli:",
-                                    fontSize = 13.sp,
-                                    color = Color.Gray
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
 
-                                val currentStyle = uiState.animationStyle
-                                val animOptions = listOf(
-                                    "FADE_EXPAND" to "Pehmeä laajennus",
-                                    "FADE_ONLY" to "Paikallaan pysyvä (Ei liikettä)",
-                                    "SLIDE_HORIZONTAL" to "Sivuttaisliuku (Slide)",
-                                    "SPRING_BOUNCE" to "Joustava (Spring)",
-                                    "INSTANT" to "Välitön"
-                                )
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                Button(
+                                    onClick = { showAddDialog = true },
+                                    modifier = Modifier.height((48 * scaleFactor).dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
                                 ) {
-                                    animOptions.forEach { (style, label) ->
-                                        val isSelected = currentStyle == style
-                                        FilterChip(
-                                            selected = isSelected,
-                                            onClick = { viewModel.updateAnimationStyle(style) },
-                                            label = { Text(label, fontSize = 12.sp) },
-                                            colors = FilterChipDefaults.filterChipColors(
-                                                selectedContainerColor = MainOrange,
-                                                selectedLabelColor = Color.White
-                                            )
-                                        )
-                                    }
+                                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
+                                    Spacer(modifier = Modifier.width((8 * scaleFactor).dp))
+                                    Text("Lisää uusi kysymys", color = Color.White, fontSize = (16 * scaleFactor).sp)
                                 }
                             }
-                        }
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Kyselyvaiheen 3 kysymykset",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = TextDark
-                            )
-
-                            Button(
-                                onClick = { showAddDialog = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy((16 * scaleFactor).dp)
                             ) {
-                                Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Lisää uusi kysymys", color = Color.White)
-                            }
-                        }
-
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            items(questions) { q ->
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                items(questions) { q ->
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                                     ) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(text = "FI: ${q.textFi}", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextDark)
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(text = "EN: ${q.textEn}", fontSize = 14.sp, color = Color.Gray)
-                                            Spacer(modifier = Modifier.height(2.dp))
-                                            Text(text = "SV: ${q.textSv}", fontSize = 14.sp, color = Color.Gray)
-                                        }
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding((16 * scaleFactor).dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(text = "FI: ${q.textFi}", fontWeight = FontWeight.Bold, fontSize = cardTextFiFontSize, color = TextDark)
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(text = "EN: ${q.textEn}", fontSize = cardTextOtherFontSize, color = Color.Gray)
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(text = "SV: ${q.textSv}", fontSize = cardTextOtherFontSize, color = Color.Gray)
+                                            }
 
-                                        Row {
-                                            IconButton(
-                                                onClick = { viewModel.moveQuestionUp(q) },
-                                                enabled = q != questions.firstOrNull()
-                                            ) {
-                                                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Siirrä ylös", tint = Color.Gray)
-                                            }
-                                            IconButton(
-                                                onClick = { viewModel.moveQuestionDown(q) },
-                                                enabled = q != questions.lastOrNull()
-                                            ) {
-                                                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Siirrä alas", tint = Color.Gray)
-                                            }
-                                            IconButton(onClick = { editingQuestion = q }) {
-                                                Icon(Icons.Default.Edit, contentDescription = "Muokkaa", tint = MainOrange)
-                                            }
-                                            IconButton(onClick = { deletingQuestion = q }) {
-                                                Icon(Icons.Default.Delete, contentDescription = "Poista", tint = MaterialTheme.colorScheme.error)
+                                            Row {
+                                                IconButton(
+                                                    onClick = { viewModel.moveQuestionUp(q) },
+                                                    enabled = q != questions.firstOrNull()
+                                                ) {
+                                                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Siirrä ylös", tint = Color.Gray, modifier = Modifier.size(iconSize))
+                                                }
+                                                IconButton(
+                                                    onClick = { viewModel.moveQuestionDown(q) },
+                                                    enabled = q != questions.lastOrNull()
+                                                ) {
+                                                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Siirrä alas", tint = Color.Gray, modifier = Modifier.size(iconSize))
+                                                }
+                                                IconButton(onClick = { editingQuestion = q }) {
+                                                    Icon(Icons.Default.Edit, contentDescription = "Muokkaa", tint = MainOrange, modifier = Modifier.size(iconSize))
+                                                }
+                                                IconButton(onClick = { deletingQuestion = q }) {
+                                                    Icon(Icons.Default.Delete, contentDescription = "Poista", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(iconSize))
+                                                }
                                             }
                                         }
                                     }
@@ -317,78 +334,79 @@ fun AdminDashboardScreen(
                             }
                         }
                     }
-                }
 
-                2 -> {
-                    // Services Tab
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Kyselyvaiheen 2 palveluvaihtoehdot",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = TextDark
-                            )
-
-                            Button(
-                                onClick = { showAddServiceDialog = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                    2 -> {
+                        // Services Tab
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = (16 * scaleFactor).dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Lisää uusi palvelu", color = Color.White)
-                            }
-                        }
+                                Text(
+                                    text = "Kyselyvaiheen 2 palveluvaihtoehdot",
+                                    fontSize = cardTitleFontSize,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextDark
+                                )
 
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            items(services) { s ->
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                Button(
+                                    onClick = { showAddServiceDialog = true },
+                                    modifier = Modifier.height((48 * scaleFactor).dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
                                 ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(text = "FI: ${s.textFi}", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextDark)
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(text = "EN: ${s.textEn}", fontSize = 14.sp, color = Color.Gray)
-                                            Spacer(modifier = Modifier.height(2.dp))
-                                            Text(text = "SV: ${s.textSv}", fontSize = 14.sp, color = Color.Gray)
-                                        }
+                                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
+                                    Spacer(modifier = Modifier.width((8 * scaleFactor).dp))
+                                    Text("Lisää uusi palvelu", color = Color.White, fontSize = (16 * scaleFactor).sp)
+                                }
+                            }
 
-                                        Row {
-                                            IconButton(
-                                                onClick = { viewModel.moveServiceUp(s) },
-                                                enabled = s != services.firstOrNull()
-                                            ) {
-                                                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Siirrä ylös", tint = Color.Gray)
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy((16 * scaleFactor).dp)
+                            ) {
+                                items(services) { s ->
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding((16 * scaleFactor).dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(text = "FI: ${s.textFi}", fontWeight = FontWeight.Bold, fontSize = cardTextFiFontSize, color = TextDark)
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(text = "EN: ${s.textEn}", fontSize = cardTextOtherFontSize, color = Color.Gray)
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(text = "SV: ${s.textSv}", fontSize = cardTextOtherFontSize, color = Color.Gray)
                                             }
-                                            IconButton(
-                                                onClick = { viewModel.moveServiceDown(s) },
-                                                enabled = s != services.lastOrNull()
-                                            ) {
-                                                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Siirrä alas", tint = Color.Gray)
-                                            }
-                                            IconButton(onClick = { editingService = s }) {
-                                                Icon(Icons.Default.Edit, contentDescription = "Muokkaa", tint = MainOrange)
-                                            }
-                                            IconButton(onClick = { deletingService = s }) {
-                                                Icon(Icons.Default.Delete, contentDescription = "Poista", tint = MaterialTheme.colorScheme.error)
+
+                                            Row {
+                                                IconButton(
+                                                    onClick = { viewModel.moveServiceUp(s) },
+                                                    enabled = s != services.firstOrNull()
+                                                ) {
+                                                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Siirrä ylös", tint = Color.Gray, modifier = Modifier.size(iconSize))
+                                                }
+                                                IconButton(
+                                                    onClick = { viewModel.moveServiceDown(s) },
+                                                    enabled = s != services.lastOrNull()
+                                                ) {
+                                                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Siirrä alas", tint = Color.Gray, modifier = Modifier.size(iconSize))
+                                                }
+                                                IconButton(onClick = { editingService = s }) {
+                                                    Icon(Icons.Default.Edit, contentDescription = "Muokkaa", tint = MainOrange, modifier = Modifier.size(iconSize))
+                                                }
+                                                IconButton(onClick = { deletingService = s }) {
+                                                    Icon(Icons.Default.Delete, contentDescription = "Poista", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(iconSize))
+                                                }
                                             }
                                         }
                                     }
@@ -409,7 +427,7 @@ fun AdminDashboardScreen(
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text("Lisää uusi kysymys (3 kieltä)") },
+            title = { Text("Lisää uusi kysymys (3 kieltä)", fontSize = 20.sp) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
@@ -446,12 +464,12 @@ fun AdminDashboardScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
                 ) {
-                    Text("Lisää")
+                    Text("Lisää", fontSize = 16.sp)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false }) {
-                    Text("Peruuta")
+                    Text("Peruuta", fontSize = 16.sp)
                 }
             }
         )
@@ -465,7 +483,7 @@ fun AdminDashboardScreen(
 
         AlertDialog(
             onDismissRequest = { editingQuestion = null },
-            title = { Text("Muokkaa kysymystä (3 kieltä)") },
+            title = { Text("Muokkaa kysymystä (3 kieltä)", fontSize = 20.sp) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
@@ -497,12 +515,12 @@ fun AdminDashboardScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
                 ) {
-                    Text("Tallenna")
+                    Text("Tallenna", fontSize = 16.sp)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { editingQuestion = null }) {
-                    Text("Peruuta")
+                    Text("Peruuta", fontSize = 16.sp)
                 }
             }
         )
@@ -512,8 +530,8 @@ fun AdminDashboardScreen(
     deletingQuestion?.let { q ->
         AlertDialog(
             onDismissRequest = { deletingQuestion = null },
-            title = { Text("Poista kysymys?") },
-            text = { Text("Haluatko varmasti poistaa kysymyksen: \"${q.textFi}\"?") },
+            title = { Text("Poista kysymys?", fontSize = 20.sp) },
+            text = { Text("Haluatko varmasti poistaa kysymyksen: \"${q.textFi}\"?", fontSize = 16.sp) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -522,12 +540,12 @@ fun AdminDashboardScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Poista", color = Color.White)
+                    Text("Poista", color = Color.White, fontSize = 16.sp)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { deletingQuestion = null }) {
-                    Text("Peruuta")
+                    Text("Peruuta", fontSize = 16.sp)
                 }
             }
         )
@@ -541,7 +559,7 @@ fun AdminDashboardScreen(
 
         AlertDialog(
             onDismissRequest = { showAddServiceDialog = false },
-            title = { Text("Lisää uusi palvelu (3 kieltä)") },
+            title = { Text("Lisää uusi palvelu (3 kieltä)", fontSize = 20.sp) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
@@ -578,12 +596,12 @@ fun AdminDashboardScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
                 ) {
-                    Text("Lisää")
+                    Text("Lisää", fontSize = 16.sp)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddServiceDialog = false }) {
-                    Text("Peruuta")
+                    Text("Peruuta", fontSize = 16.sp)
                 }
             }
         )
@@ -597,7 +615,7 @@ fun AdminDashboardScreen(
 
         AlertDialog(
             onDismissRequest = { editingService = null },
-            title = { Text("Muokkaa palvelua (3 kieltä)") },
+            title = { Text("Muokkaa palvelua (3 kieltä)", fontSize = 20.sp) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
@@ -629,12 +647,12 @@ fun AdminDashboardScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
                 ) {
-                    Text("Tallenna")
+                    Text("Tallenna", fontSize = 16.sp)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { editingService = null }) {
-                    Text("Peruuta")
+                    Text("Peruuta", fontSize = 16.sp)
                 }
             }
         )
@@ -644,8 +662,8 @@ fun AdminDashboardScreen(
     deletingService?.let { s ->
         AlertDialog(
             onDismissRequest = { deletingService = null },
-            title = { Text("Poista palvelu?") },
-            text = { Text("Haluatko varmasti poistaa palvelun: \"${s.textFi}\"?") },
+            title = { Text("Poista palvelu?", fontSize = 20.sp) },
+            text = { Text("Haluatko varmasti poistaa palvelun: \"${s.textFi}\"?", fontSize = 16.sp) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -654,12 +672,12 @@ fun AdminDashboardScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Poista", color = Color.White)
+                    Text("Poista", color = Color.White, fontSize = 16.sp)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { deletingService = null }) {
-                    Text("Peruuta")
+                    Text("Peruuta", fontSize = 16.sp)
                 }
             }
         )

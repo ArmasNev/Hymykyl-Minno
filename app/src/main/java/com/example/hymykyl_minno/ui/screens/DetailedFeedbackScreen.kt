@@ -64,21 +64,21 @@ fun DetailedFeedbackScreen(
 
     FeedbackLayout(selectedLanguage = lang) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val isLargeScreen = maxWidth >= 1100.dp
+            val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
 
-            val titleFontSize = if (isLargeScreen) 34.sp else 26.sp
-            val titleLineHeight = if (isLargeScreen) 42.sp else 34.sp
-            val stepFontSize = if (isLargeScreen) 17.sp else 15.sp
-            val navButtonHeight = if (isLargeScreen) 60.dp else 52.dp
-            val navButtonWidth = if (isLargeScreen) 170.dp else 150.dp
-            val navFontSize = if (isLargeScreen) 19.sp else 17.sp
-            val activeQFontSize = if (isLargeScreen) 26.sp else 22.sp
-            val inactiveQFontSize = if (isLargeScreen) 18.sp else 15.sp
+            val titleFontSize = (36 * scaleFactor).sp
+            val titleLineHeight = (44 * scaleFactor).sp
+            val stepFontSize = (20 * scaleFactor).sp
+            val navButtonHeight = (64 * scaleFactor).dp
+            val navButtonWidth = (180 * scaleFactor).dp
+            val navFontSize = (22 * scaleFactor).sp
+            val activeQFontSize = (30 * scaleFactor).sp
+            val inactiveQFontSize = (22 * scaleFactor).sp
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 32.dp, vertical = 32.dp)
+                    .padding(horizontal = (32 * scaleFactor).dp, vertical = (32 * scaleFactor).dp)
             ) {
                 // Header (fixed)
                 Column {
@@ -109,7 +109,7 @@ fun DetailedFeedbackScreen(
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 180.dp, bottom = 300.dp)
+                        contentPadding = PaddingValues(top = (180 * scaleFactor).dp, bottom = (300 * scaleFactor).dp)
                     ) {
                         itemsIndexed(questions) { index, question ->
                             val currentRating = uiState.detailedRatings[index] ?: 0
@@ -186,8 +186,8 @@ fun QuestionItem(
     rating: Int,
     isActive: Boolean,
     animationStyle: String = "FADE_EXPAND",
-    activeFontSize: androidx.compose.ui.unit.TextUnit = 22.sp,
-    inactiveFontSize: androidx.compose.ui.unit.TextUnit = 15.sp,
+    activeFontSize: androidx.compose.ui.unit.TextUnit = 30.sp,
+    inactiveFontSize: androidx.compose.ui.unit.TextUnit = 22.sp,
     onActivate: () -> Unit,
     onRatingSelected: (Int) -> Unit
 ) {

@@ -27,25 +27,26 @@ fun FeedbackLayout(
     content: @Composable RowScope.() -> Unit
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val isLargeScreen = maxWidth >= 1100.dp
+        val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
 
-        val sidebarPadding = if (isLargeScreen) 40.dp else 32.dp
-        val logoHeight = if (isLargeScreen) 58.dp else 48.dp
-        val titleFontSize = if (isLargeScreen) 32.sp else 26.sp
-        val titleLineHeight = if (isLargeScreen) 40.sp else 34.sp
-        val descFontSize = if (isLargeScreen) 15.sp else 13.sp
-        val footerFontSize = if (isLargeScreen) 13.sp else 12.sp
+        val sidebarPadding = (24 * scaleFactor).dp
+        val logoHeight = (46 * scaleFactor).dp
+        val titleFontSize = (26 * scaleFactor).sp
+        val titleLineHeight = (34 * scaleFactor).sp
+        val descFontSize = (13 * scaleFactor).sp
+        val descLineHeight = (18 * scaleFactor).sp
+        val footerFontSize = (12 * scaleFactor).sp
 
         Row(
             modifier = Modifier
                 .fillMaxSize()
                 .background(BackgroundCream)
         ) {
-            // Orange Sidebar (proportional width so it adapts to any tablet size)
+            // Orange Sidebar (Narrower weight 0.20f)
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .weight(0.26f)
+                    .weight(0.20f)
                     .background(MainOrange)
                     .padding(sidebarPadding)
             ) {
@@ -87,16 +88,17 @@ fun FeedbackLayout(
                         Text(
                             text = AppStrings.sidebarDesc(selectedLanguage),
                             color = Color.White,
-                            fontSize = descFontSize
+                            fontSize = descFontSize,
+                            lineHeight = descLineHeight
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         Box(
                             modifier = Modifier
                                 .height(1.dp)
                                 .fillMaxWidth()
                                 .background(Color.White.copy(alpha = 0.3f))
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "HyMy-kylä · 2026",
                             color = Color.White.copy(alpha = 0.7f),
@@ -106,11 +108,11 @@ fun FeedbackLayout(
                 }
             }
 
-            // Main Content Area
+            // Main Content Area (Wider weight 0.80f)
             Row(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .weight(0.74f),
+                    .weight(0.80f),
                 content = content
             )
         }

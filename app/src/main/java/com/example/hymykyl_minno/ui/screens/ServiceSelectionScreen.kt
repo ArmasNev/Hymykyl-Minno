@@ -34,18 +34,18 @@ fun ServiceSelectionScreen(
 
     FeedbackLayout(selectedLanguage = lang) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val isLargeScreen = maxWidth >= 1100.dp
+            val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
 
-            val screenPadding = if (isLargeScreen) 40.dp else 32.dp
-            val titleFontSize = if (isLargeScreen) 36.sp else 28.sp
-            val titleLineHeight = if (isLargeScreen) 44.sp else 36.sp
-            val stepFontSize = if (isLargeScreen) 17.sp else 15.sp
-            val buttonHeight = if (isLargeScreen) 72.dp else 60.dp
-            val serviceFontSize = if (isLargeScreen) 18.sp else 15.sp
-            val gridSpacing = if (isLargeScreen) 18.dp else 14.dp
-            val navButtonHeight = if (isLargeScreen) 60.dp else 52.dp
-            val navButtonWidth = if (isLargeScreen) 170.dp else 150.dp
-            val navFontSize = if (isLargeScreen) 19.sp else 17.sp
+            val screenPadding = (32 * scaleFactor).dp
+            val titleFontSize = (38 * scaleFactor).sp
+            val titleLineHeight = (46 * scaleFactor).sp
+            val stepFontSize = (20 * scaleFactor).sp
+            val buttonHeight = (72 * scaleFactor).dp
+            val serviceFontSize = (22 * scaleFactor).sp
+            val gridSpacing = (16 * scaleFactor).dp
+            val navButtonHeight = (64 * scaleFactor).dp
+            val navButtonWidth = (180 * scaleFactor).dp
+            val navFontSize = (22 * scaleFactor).sp
 
             Column(
                 modifier = Modifier
@@ -60,7 +60,7 @@ fun ServiceSelectionScreen(
                     Text(text = AppStrings.stepIndicator(2, lang), color = Color.Gray, fontSize = stepFontSize)
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height((20 * scaleFactor).dp))
 
                 Text(
                     text = AppStrings.serviceTitle(lang),
@@ -70,7 +70,7 @@ fun ServiceSelectionScreen(
                     color = TextDark
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height((20 * scaleFactor).dp))
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),

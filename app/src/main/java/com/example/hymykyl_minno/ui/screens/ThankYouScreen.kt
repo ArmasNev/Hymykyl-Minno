@@ -43,18 +43,18 @@ fun ThankYouScreen(
 
     FeedbackLayout(selectedLanguage = lang) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val isLargeScreen = maxWidth >= 1100.dp
+            val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
 
-            val iconSize = if (isLargeScreen) 96.dp else 80.dp
-            val titleFontSize = if (isLargeScreen) 40.sp else 32.sp
-            val subtitleFontSize = if (isLargeScreen) 20.sp else 16.sp
-            val resetFontSize = if (isLargeScreen) 16.sp else 14.sp
-            val btnFontSize = if (isLargeScreen) 18.sp else 16.sp
+            val iconSize = (96 * scaleFactor).dp
+            val titleFontSize = (46 * scaleFactor).sp
+            val subtitleFontSize = (24 * scaleFactor).sp
+            val resetFontSize = (20 * scaleFactor).sp
+            val btnFontSize = (22 * scaleFactor).sp
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(32.dp),
+                    .padding((32 * scaleFactor).dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {

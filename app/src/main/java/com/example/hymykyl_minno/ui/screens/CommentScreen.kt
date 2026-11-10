@@ -40,22 +40,22 @@ fun CommentScreen(
 
     FeedbackLayout(selectedLanguage = lang) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val isLargeScreen = maxWidth >= 1100.dp
+            val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
 
-            val titleFontSize = if (isLargeScreen) 36.sp else 28.sp
-            val titleLineHeight = if (isLargeScreen) 44.sp else 36.sp
-            val subtitleFontSize = if (isLargeScreen) 18.sp else 15.sp
-            val stepFontSize = if (isLargeScreen) 17.sp else 15.sp
-            val fieldHeight = if (isLargeScreen) 200.dp else 160.dp
-            val navButtonHeight = if (isLargeScreen) 60.dp else 52.dp
-            val navButtonWidth = if (isLargeScreen) 190.dp else 170.dp
-            val navFontSize = if (isLargeScreen) 19.sp else 17.sp
-            val reminderFontSize = if (isLargeScreen) 15.sp else 13.sp
+            val titleFontSize = (38 * scaleFactor).sp
+            val titleLineHeight = (46 * scaleFactor).sp
+            val subtitleFontSize = (22 * scaleFactor).sp
+            val stepFontSize = (20 * scaleFactor).sp
+            val fieldHeight = (200 * scaleFactor).dp
+            val navButtonHeight = (64 * scaleFactor).dp
+            val navButtonWidth = (220 * scaleFactor).dp
+            val navFontSize = (22 * scaleFactor).sp
+            val reminderFontSize = (19 * scaleFactor).sp
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(32.dp)
+                    .padding((32 * scaleFactor).dp)
                     .pointerInput(Unit) {
                         detectTapGestures {
                             focusManager.clearFocus()

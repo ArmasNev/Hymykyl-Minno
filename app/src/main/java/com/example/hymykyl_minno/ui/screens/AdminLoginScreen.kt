@@ -38,97 +38,104 @@ fun AdminLoginScreen(
     }
 
     FeedbackLayout {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(48.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = if (isAdminRegistered) "Ylläpidon kirjautuminen" else "Luo ylläpitäjätunnus",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextDark
-            )
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
 
-            Spacer(modifier = Modifier.height(8.dp))
+            val titleFontSize = (32 * scaleFactor).sp
+            val subtitleFontSize = (18 * scaleFactor).sp
+            val buttonHeight = (56 * scaleFactor).dp
+            val buttonFontSize = (18 * scaleFactor).sp
 
-            Text(
-                text = if (isAdminRegistered) "Syötä käyttäjätunnus ja salasana päästäksesi hallintaan."
-                else "Aseta ensimmäinen käyttäjätunnus ja salasana ylläpitoa varten.",
-                color = Color.Gray,
-                fontSize = 16.sp
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("Käyttäjätunnus") },
-                singleLine = true,
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth(0.6f)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Salasana") },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier
-                    .fillMaxWidth(0.6f)
-            )
-
-            if (errorMessage.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(text = errorMessage, color = MaterialTheme.colorScheme.error, fontSize = 14.sp)
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxSize()
+                    .padding((48 * scaleFactor).dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                OutlinedButton(
-                    onClick = onBack,
-                    modifier = Modifier.height(48.dp)
-                ) {
-                    Text("Takaisin", fontSize = 16.sp)
+                Text(
+                    text = if (isAdminRegistered) "Ylläpidon kirjautuminen" else "Luo ylläpitäjätunnus",
+                    fontSize = titleFontSize,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
+
+                Spacer(modifier = Modifier.height((12 * scaleFactor).dp))
+
+                Text(
+                    text = if (isAdminRegistered) "Syötä käyttäjätunnus ja salasana päästäksesi hallintaan."
+                    else "Aseta ensimmäinen käyttäjätunnus ja salasana ylläpitoa varten.",
+                    color = Color.Gray,
+                    fontSize = subtitleFontSize
+                )
+
+                Spacer(modifier = Modifier.height((32 * scaleFactor).dp))
+
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Käyttäjätunnus", fontSize = subtitleFontSize) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(0.6f)
+                )
+
+                Spacer(modifier = Modifier.height((16 * scaleFactor).dp))
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Salasana", fontSize = subtitleFontSize) },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(0.6f)
+                )
+
+                if (errorMessage.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height((16 * scaleFactor).dp))
+                    Text(text = errorMessage, color = MaterialTheme.colorScheme.error, fontSize = (16 * scaleFactor).sp)
                 }
 
-                Button(
-                    onClick = {
-                        if (username.isBlank() || password.isBlank()) {
-                            errorMessage = "Täytä molemmat kentät."
-                            return@Button
-                        }
-                        coroutineScope.launch {
-                            if (!isAdminRegistered) {
-                                viewModel.registerAdmin(username, password)
-                                onLoginSuccess()
-                            } else {
-                                val success = viewModel.verifyAdminLogin(username, password)
-                                if (success) {
+                Spacer(modifier = Modifier.height((32 * scaleFactor).dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy((16 * scaleFactor).dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onBack,
+                        modifier = Modifier.height(buttonHeight)
+                    ) {
+                        Text("Takaisin", fontSize = buttonFontSize)
+                    }
+
+                    Button(
+                        onClick = {
+                            if (username.isBlank() || password.isBlank()) {
+                                errorMessage = "Täytä molemmat kentät."
+                                return@Button
+                            }
+                            coroutineScope.launch {
+                                if (!isAdminRegistered) {
+                                    viewModel.registerAdmin(username, password)
                                     onLoginSuccess()
                                 } else {
-                                    errorMessage = "Virheellinen käyttäjätunnus tai salasana."
+                                    val success = viewModel.verifyAdminLogin(username, password)
+                                    if (success) {
+                                        onLoginSuccess()
+                                    } else {
+                                        errorMessage = "Virheellinen käyttäjätunnus tai salasana."
+                                    }
                                 }
                             }
-                        }
-                    },
-                    modifier = Modifier.height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
-                ) {
-                    Text(
-                        text = if (isAdminRegistered) "Kirjaudu" else "Rekisteröidy",
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
+                        },
+                        modifier = Modifier.height(buttonHeight),
+                        colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                    ) {
+                        Text(
+                            text = if (isAdminRegistered) "Kirjaudu" else "Rekisteröidy",
+                            fontSize = buttonFontSize,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }

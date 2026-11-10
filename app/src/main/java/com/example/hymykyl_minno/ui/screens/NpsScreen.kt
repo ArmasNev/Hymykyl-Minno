@@ -33,20 +33,21 @@ fun NpsScreen(
         onAdminAccessRequested = onAdminAccess
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val isLargeScreen = maxWidth >= 1100.dp
+            val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
 
-            val titleFontSize = if (isLargeScreen) 36.sp else 28.sp
-            val titleLineHeight = if (isLargeScreen) 44.sp else 36.sp
-            val stepFontSize = if (isLargeScreen) 17.sp else 15.sp
-            val navButtonHeight = if (isLargeScreen) 60.dp else 52.dp
-            val navButtonWidth = if (isLargeScreen) 170.dp else 150.dp
-            val navFontSize = if (isLargeScreen) 19.sp else 17.sp
-            val scaleLabelSize = if (isLargeScreen) 16.sp else 14.sp
+            val titleFontSize = (38 * scaleFactor).sp
+            val titleLineHeight = (46 * scaleFactor).sp
+            val stepFontSize = (20 * scaleFactor).sp
+            val navButtonHeight = (64 * scaleFactor).dp
+            val navButtonWidth = (180 * scaleFactor).dp
+            val navFontSize = (22 * scaleFactor).sp
+            val scaleLabelSize = (20 * scaleFactor).sp
+            val screenPadding = (32 * scaleFactor).dp
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 32.dp, vertical = 32.dp)
+                    .padding(screenPadding)
             ) {
                 // Header with language and progress
                 Row(
@@ -61,7 +62,7 @@ fun NpsScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height((24 * scaleFactor).dp))
 
                 Text(
                     text = AppStrings.npsTitle(lang),
@@ -79,14 +80,14 @@ fun NpsScreen(
                         onRatingSelected = { viewModel.updateNpsRating(it) }
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height((16 * scaleFactor).dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = AppStrings.npsNotAtAll(lang), color = Color.Gray, fontSize = scaleLabelSize)
-                        Text(text = AppStrings.npsExtremelyLikely(lang), color = Color.Gray, fontSize = scaleLabelSize)
+                        Text(text = AppStrings.npsNotAtAll(lang), color = Color.Gray, fontSize = scaleLabelSize, fontWeight = FontWeight.Medium)
+                        Text(text = AppStrings.npsExtremelyLikely(lang), color = Color.Gray, fontSize = scaleLabelSize, fontWeight = FontWeight.Medium)
                     }
                 }
 
