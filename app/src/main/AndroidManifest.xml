@@ -11,7 +11,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.HyMykyläMinno">
+        android:theme="@style/Theme.HyMykylaMinno">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -19,11 +19,17 @@
             android:screenOrientation="landscape"
             android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-            android:theme="@style/Theme.HyMykyläMinno">
+            android:theme="@style/Theme.HyMykylaMinno">
+            <!-- Standard App Launcher Filter -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Default Home App Filter for Android Settings -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 

@@ -46,6 +46,15 @@ fun AdminDashboardScreen(
     viewModel: FeedbackViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val context = LocalContext.current
+    val activity = context as? com.example.hymykyl_minno.MainActivity
+
+    DisposableEffect(Unit) {
+        activity?.disableKioskMode()
+        onDispose {
+            activity?.enableKioskMode()
+        }
+    }
+
     val coroutineScope = rememberCoroutineScope()
     val feedbackList by viewModel.allFeedback.collectAsState()
     val questions by viewModel.surveyQuestions.collectAsState()
