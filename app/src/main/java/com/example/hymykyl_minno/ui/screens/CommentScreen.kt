@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -55,6 +56,7 @@ fun CommentScreen(
             val navButtonWidth = (220 * scaleFactor).dp
             val navFontSize = (22 * scaleFactor).sp
             val reminderFontSize = (19 * scaleFactor).sp
+            val inputFontSize = (22 * scaleFactor).sp
 
             Column(
                 modifier = Modifier
@@ -101,7 +103,11 @@ fun CommentScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(fieldHeight),
-                    placeholder = { Text(text = AppStrings.commentPlaceholder(lang), fontSize = subtitleFontSize) },
+                    textStyle = TextStyle(
+                        fontSize = inputFontSize,
+                        color = TextDark
+                    ),
+                    placeholder = { Text(text = AppStrings.commentPlaceholder(lang), fontSize = inputFontSize, color = Color.Gray) },
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Done
                     ),
