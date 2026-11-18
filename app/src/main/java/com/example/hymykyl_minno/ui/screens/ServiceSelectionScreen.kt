@@ -32,7 +32,11 @@ fun ServiceSelectionScreen(
     val lang = uiState.selectedLanguage
     val dbServices by viewModel.serviceOptions.collectAsState()
 
-    FeedbackLayout(selectedLanguage = lang) {
+    FeedbackLayout(
+        selectedLanguage = lang,
+        customTitle = viewModel.getSidebarTitle(lang),
+        customDesc = viewModel.getSidebarDesc(lang)
+    ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
 
@@ -43,24 +47,22 @@ fun ServiceSelectionScreen(
             val buttonHeight = (72 * scaleFactor).dp
             val serviceFontSize = (22 * scaleFactor).sp
             val gridSpacing = (16 * scaleFactor).dp
-            val navButtonHeight = (64 * scaleFactor).dp
-            val navButtonWidth = (180 * scaleFactor).dp
-            val navFontSize = (22 * scaleFactor).sp
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(screenPadding)
             ) {
+                // Header with step indicator
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = AppStrings.stepIndicator(2, lang), color = Color.Gray, fontSize = stepFontSize)
+                    Text(text = AppStrings.stepIndicator(2, lang), color = Color.DarkGray, fontSize = stepFontSize, fontWeight = FontWeight.SemiBold)
                 }
 
-                Spacer(modifier = Modifier.height((20 * scaleFactor).dp))
+                Spacer(modifier = Modifier.height((24 * scaleFactor).dp))
 
                 Text(
                     text = AppStrings.serviceTitle(lang),
@@ -70,67 +72,69 @@ fun ServiceSelectionScreen(
                     color = TextDark
                 )
 
-                Spacer(modifier = Modifier.height((20 * scaleFactor).dp))
+                Spacer(modifier = Modifier.height((24 * scaleFactor).dp))
 
+                // Dynamic Service Options Grid
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
                     horizontalArrangement = Arrangement.spacedBy(gridSpacing),
                     verticalArrangement = Arrangement.spacedBy(gridSpacing),
                     modifier = Modifier.weight(1f)
                 ) {
-                    items(dbServices) { s ->
-                        val canonicalName = s.textFi
-                        val label = when (lang) {
-                            "EN" -> s.textEn.ifEmpty { s.textFi }
-                            "SV" -> s.textSv.ifEmpty { s.textFi }
-                            else -> s.textFi
+                    items(dbServices) { option ->
+                        val isSelected = uiState.selectedService == option.serviceKey
+                        val serviceText = when (lang) {
+                            "EN" -> option.textEn.ifEmpty { option.textFi }
+                            "SV" -> option.textSv.ifEmpty { option.textFi }
+                            else -> option.textFi
                         }
-                        val isSelected = uiState.selectedService == canonicalName
 
-                        OutlinedButton(
-                            onClick = { viewModel.updateService(canonicalName) },
-                            modifier = Modifier.height(buttonHeight),
-                            shape = MaterialTheme.shapes.medium,
-                            border = BorderStroke(
-                                if (isSelected) 2.dp else 1.dp,
-                                if (isSelected) MainOrange else Color.LightGray
+                        Button(
+                            onClick = {
+                                viewModel.updateService(option.serviceKey)
+                                onNext()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(buttonHeight),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isSelected) MainOrange else Color.White,
+                                contentColor = if (isSelected) Color.White else TextDark
                             ),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = if (isSelected) MainOrange.copy(alpha = 0.1f) else Color.White
+                            border = BorderStroke(
+                                (2 * scaleFactor).dp,
+                                if (isSelected) MainOrange else Color.LightGray
                             )
                         ) {
                             Text(
-                                text = label,
-                                color = TextDark,
+                                text = serviceText,
                                 fontSize = serviceFontSize,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Start
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }
                 }
 
+                Spacer(modifier = Modifier.height((16 * scaleFactor).dp))
+
+                // Footer Navigation
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onBack) {
-                        Text(text = AppStrings.btnBack(lang), color = Color.Gray, fontSize = navFontSize)
-                    }
-                    TextButton(onClick = onSkip) {
-                        Text(text = AppStrings.btnSkip(lang), color = Color.Gray, fontSize = navFontSize)
-                    }
-                    Button(
-                        onClick = onNext,
-                        enabled = uiState.selectedService.isNotEmpty(),
-                        modifier = Modifier
-                            .height(navButtonHeight)
-                            .width(navButtonWidth),
-                        colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                    OutlinedButton(
+                        onClick = onBack,
+                        modifier = Modifier.height((64 * scaleFactor).dp).width((180 * scaleFactor).dp)
                     ) {
-                        Text(text = AppStrings.btnNext(lang), fontSize = navFontSize, color = Color.White)
+                        Text(text = AppStrings.btnBack(lang), fontSize = (22 * scaleFactor).sp)
+                    }
+
+                    TextButton(
+                        onClick = onSkip,
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+                    ) {
+                        Text(text = AppStrings.btnSkip(lang), fontSize = (22 * scaleFactor).sp)
                     }
                 }
             }

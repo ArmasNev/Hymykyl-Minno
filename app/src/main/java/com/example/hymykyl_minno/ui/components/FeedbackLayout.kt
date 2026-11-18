@@ -24,8 +24,13 @@ import com.example.hymykyl_minno.ui.theme.MainOrange
 fun FeedbackLayout(
     selectedLanguage: String = "FI",
     onAdminAccessRequested: () -> Unit = {},
+    customTitle: String? = null,
+    customDesc: String? = null,
     content: @Composable RowScope.() -> Unit
 ) {
+    val displayTitle = if (!customTitle.isNullOrBlank()) customTitle else AppStrings.sidebarTitle(selectedLanguage)
+    val displayDesc = if (!customDesc.isNullOrBlank()) customDesc else AppStrings.sidebarDesc(selectedLanguage)
+
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
 
@@ -77,7 +82,7 @@ fun FeedbackLayout(
                     )
 
                     Text(
-                        text = AppStrings.sidebarTitle(selectedLanguage),
+                        text = displayTitle,
                         color = Color.White,
                         fontSize = titleFontSize,
                         fontWeight = FontWeight.Bold,
@@ -86,7 +91,7 @@ fun FeedbackLayout(
 
                     Column {
                         Text(
-                            text = AppStrings.sidebarDesc(selectedLanguage),
+                            text = displayDesc,
                             color = Color.White,
                             fontSize = descFontSize,
                             lineHeight = descLineHeight

@@ -10,6 +10,7 @@ import com.example.hymykyl_minno.data.FeedbackAnswer
 import com.example.hymykyl_minno.data.FeedbackRepository
 import com.example.hymykyl_minno.data.ServiceOption
 import com.example.hymykyl_minno.data.SurveyQuestion
+import com.example.hymykyl_minno.ui.localization.AppStrings
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +31,8 @@ data class FeedbackUiState(
     val detailedRatings: Map<Int, Int> = emptyMap(),
     val comment: String = "",
     val isSubmitted: Boolean = false,
-    val animationStyle: String = "FADE_EXPAND"
+    val animationStyle: String = "FADE_EXPAND",
+    val sidebarUpdateTrigger: Long = 0L
 )
 
 class FeedbackViewModel(
@@ -159,6 +161,44 @@ class FeedbackViewModel(
                 repository.insertServices(defaultServices)
             }
         }
+    }
+
+    // Sidebar Customization
+    fun getSidebarTitle(lang: String): String {
+        val key = "SIDEBAR_TITLE_$lang"
+        val stored = prefs?.getString(key, null)
+        return if (!stored.isNullOrBlank()) stored else AppStrings.sidebarTitle(lang)
+    }
+
+    fun getSidebarDesc(lang: String): String {
+        val key = "SIDEBAR_DESC_$lang"
+        val stored = prefs?.getString(key, null)
+        return if (!stored.isNullOrBlank()) stored else AppStrings.sidebarDesc(lang)
+    }
+
+    fun saveSidebarTexts(
+        titleFi: String, descFi: String,
+        titleEn: String, descEn: String,
+        titleSv: String, descSv: String
+    ) {
+        prefs?.edit()
+            ?.putString("SIDEBAR_TITLE_FI", titleFi.trim())
+            ?.putString("SIDEBAR_DESC_FI", descFi.trim())
+            ?.putString("SIDEBAR_TITLE_EN", titleEn.trim())
+            ?.putString("SIDEBAR_DESC_EN", descEn.trim())
+            ?.putString("SIDEBAR_TITLE_SV", titleSv.trim())
+            ?.putString("SIDEBAR_DESC_SV", descSv.trim())
+            ?.apply()
+        _uiState.update { it.copy(sidebarUpdateTrigger = System.currentTimeMillis()) }
+    }
+
+    fun resetSidebarTexts() {
+        prefs?.edit()
+            ?.remove("SIDEBAR_TITLE_FI")?.remove("SIDEBAR_DESC_FI")
+            ?.remove("SIDEBAR_TITLE_EN")?.remove("SIDEBAR_DESC_EN")
+            ?.remove("SIDEBAR_TITLE_SV")?.remove("SIDEBAR_DESC_SV")
+            ?.apply()
+        _uiState.update { it.copy(sidebarUpdateTrigger = System.currentTimeMillis()) }
     }
 
     fun updateLanguage(lang: String) {

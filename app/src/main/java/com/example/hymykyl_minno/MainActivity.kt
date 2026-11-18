@@ -33,6 +33,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (!isKioskDisabled) {
+            enableKioskMode()
+        }
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus && !isKioskDisabled) {
@@ -43,14 +50,7 @@ class MainActivity : ComponentActivity() {
     fun enableKioskMode() {
         isKioskDisabled = false
 
-        // 1. Programmatic Native LockTask Mode
-        try {
-            startLockTask()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        // 2. Hide System Bars
+        // Hide System Bars
         val window = window
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(false)
@@ -79,14 +79,7 @@ class MainActivity : ComponentActivity() {
     fun disableKioskMode() {
         isKioskDisabled = true
 
-        // 1. Exit Native LockTask Mode
-        try {
-            stopLockTask()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        // 2. Reveal System Bars
+        // Reveal System Bars
         val window = window
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(true)

@@ -30,7 +30,9 @@ fun NpsScreen(
 
     FeedbackLayout(
         selectedLanguage = lang,
-        onAdminAccessRequested = onAdminAccess
+        onAdminAccessRequested = onAdminAccess,
+        customTitle = viewModel.getSidebarTitle(lang),
+        customDesc = viewModel.getSidebarDesc(lang)
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
@@ -41,7 +43,7 @@ fun NpsScreen(
             val navButtonHeight = (64 * scaleFactor).dp
             val navButtonWidth = (180 * scaleFactor).dp
             val navFontSize = (22 * scaleFactor).sp
-            val scaleLabelSize = (20 * scaleFactor).sp
+            val scaleLabelSize = (22 * scaleFactor).sp
             val screenPadding = (32 * scaleFactor).dp
 
             Column(
@@ -55,7 +57,7 @@ fun NpsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = AppStrings.stepIndicator(1, lang), color = Color.Gray, fontSize = stepFontSize)
+                    Text(text = AppStrings.stepIndicator(1, lang), color = Color.DarkGray, fontSize = stepFontSize, fontWeight = FontWeight.SemiBold)
                     LanguageSelector(
                         selectedLanguage = lang,
                         onLanguageSelected = { viewModel.updateLanguage(it) }
@@ -86,8 +88,8 @@ fun NpsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = AppStrings.npsNotAtAll(lang), color = Color.Gray, fontSize = scaleLabelSize, fontWeight = FontWeight.Medium)
-                        Text(text = AppStrings.npsExtremelyLikely(lang), color = Color.Gray, fontSize = scaleLabelSize, fontWeight = FontWeight.Medium)
+                        Text(text = AppStrings.npsNotAtAll(lang), color = Color.Black, fontSize = scaleLabelSize, fontWeight = FontWeight.Bold)
+                        Text(text = AppStrings.npsExtremelyLikely(lang), color = Color.Black, fontSize = scaleLabelSize, fontWeight = FontWeight.Bold)
                     }
                 }
 

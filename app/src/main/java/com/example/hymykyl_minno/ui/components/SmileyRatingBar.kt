@@ -108,9 +108,9 @@ private fun RatingItem(
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = rating.toString(),
-            color = if (isSelected) TextDark else TextDark.copy(alpha = 0.5f),
-            fontSize = 14.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            color = Color.Black,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }
@@ -194,9 +194,9 @@ private fun FiveRatingItem(
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = rating.toString(),
-            color = if (isSelected) TextDark else TextDark.copy(alpha = 0.5f),
-            fontSize = 15.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            color = Color.Black,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }

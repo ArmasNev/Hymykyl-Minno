@@ -37,7 +37,10 @@ fun AdminLoginScreen(
         }
     }
 
-    FeedbackLayout {
+    FeedbackLayout(
+        customTitle = viewModel.getSidebarTitle("FI"),
+        customDesc = viewModel.getSidebarDesc("FI")
+    ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
 

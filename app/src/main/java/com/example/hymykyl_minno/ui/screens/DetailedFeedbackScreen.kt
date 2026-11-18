@@ -62,7 +62,11 @@ fun DetailedFeedbackScreen(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    FeedbackLayout(selectedLanguage = lang) {
+    FeedbackLayout(
+        selectedLanguage = lang,
+        customTitle = viewModel.getSidebarTitle(lang),
+        customDesc = viewModel.getSidebarDesc(lang)
+    ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
 

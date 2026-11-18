@@ -11,6 +11,8 @@ import androidx.core.content.FileProvider
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -69,7 +71,10 @@ fun AdminDashboardScreen(
     var deletingService by remember { mutableStateOf<ServiceOption?>(null) }
     var showAddServiceDialog by remember { mutableStateOf(false) }
 
-    FeedbackLayout {
+    FeedbackLayout(
+        customTitle = viewModel.getSidebarTitle("FI"),
+        customDesc = viewModel.getSidebarDesc("FI")
+    ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val scaleFactor = (maxWidth / 1280.dp).coerceIn(0.85f, 1.55f)
 
@@ -118,17 +123,22 @@ fun AdminDashboardScreen(
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
-                        text = { Text("CSV-Vienti (${feedbackList.size} vastausta)", fontSize = tabFontSize) }
+                        text = { Text("CSV-Vienti (${feedbackList.size})", fontSize = tabFontSize) }
                     )
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { Text("Kysymysten hallinta (${questions.size})", fontSize = tabFontSize) }
+                        text = { Text("Kysymykset (${questions.size})", fontSize = tabFontSize) }
                     )
                     Tab(
                         selected = selectedTab == 2,
                         onClick = { selectedTab = 2 },
-                        text = { Text("Palveluiden hallinta (${services.size})", fontSize = tabFontSize) }
+                        text = { Text("Palvelut (${services.size})", fontSize = tabFontSize) }
+                    )
+                    Tab(
+                        selected = selectedTab == 3,
+                        onClick = { selectedTab = 3 },
+                        text = { Text("Sivupalkki", fontSize = tabFontSize) }
                     )
                 }
 
@@ -422,6 +432,14 @@ fun AdminDashboardScreen(
                                 }
                             }
                         }
+                    }
+
+                    3 -> {
+                        // Sidebar Editor Tab
+                        SidebarEditorSection(
+                            viewModel = viewModel,
+                            scaleFactor = scaleFactor
+                        )
                     }
                 }
             }
@@ -742,4 +760,163 @@ private fun shareCsvFile(context: Context, csvData: String) {
     }
 
     context.startActivity(Intent.createChooser(intent, "Jaa CSV-tiedosto"))
+}
+
+@Composable
+private fun SidebarEditorSection(
+    viewModel: FeedbackViewModel,
+    scaleFactor: Float
+) {
+    var titleFi by remember { mutableStateOf(viewModel.getSidebarTitle("FI")) }
+    var descFi by remember { mutableStateOf(viewModel.getSidebarDesc("FI")) }
+
+    var titleEn by remember { mutableStateOf(viewModel.getSidebarTitle("EN")) }
+    var descEn by remember { mutableStateOf(viewModel.getSidebarDesc("EN")) }
+
+    var titleSv by remember { mutableStateOf(viewModel.getSidebarTitle("SV")) }
+    var descSv by remember { mutableStateOf(viewModel.getSidebarDesc("SV")) }
+
+    val context = LocalContext.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        Text(
+            text = "Muokkaa sivupalkin tekstejä (Title & Description)",
+            fontSize = (20 * scaleFactor).sp,
+            fontWeight = FontWeight.Bold,
+            color = com.example.hymykyl_minno.ui.theme.TextDark
+        )
+        Spacer(modifier = Modifier.height((4 * scaleFactor).dp))
+        Text(
+            text = "Voit mukauttaa oranssin sivupalkin otsikkoa ja kuvaustekstiä jokaiselle kielelle (FI, EN, SV). Tyhjät kentät palautuvat oletukseen.",
+            color = Color.Gray,
+            fontSize = (15 * scaleFactor).sp
+        )
+
+        Spacer(modifier = Modifier.height((16 * scaleFactor).dp))
+
+        // FI Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(modifier = Modifier.padding((16 * scaleFactor).dp)) {
+                Text("Suomi (FI)", fontWeight = FontWeight.Bold, fontSize = (18 * scaleFactor).sp, color = MainOrange)
+                Spacer(modifier = Modifier.height((8 * scaleFactor).dp))
+                OutlinedTextField(
+                    value = titleFi,
+                    onValueChange = { titleFi = it },
+                    label = { Text("Sivupalkin otsikko (FI)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height((8 * scaleFactor).dp))
+                OutlinedTextField(
+                    value = descFi,
+                    onValueChange = { descFi = it },
+                    label = { Text("Sivupalkin kuvausteksti (FI)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height((12 * scaleFactor).dp))
+
+        // EN Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(modifier = Modifier.padding((16 * scaleFactor).dp)) {
+                Text("English (EN)", fontWeight = FontWeight.Bold, fontSize = (18 * scaleFactor).sp, color = MainOrange)
+                Spacer(modifier = Modifier.height((8 * scaleFactor).dp))
+                OutlinedTextField(
+                    value = titleEn,
+                    onValueChange = { titleEn = it },
+                    label = { Text("Sidebar Title (EN)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height((8 * scaleFactor).dp))
+                OutlinedTextField(
+                    value = descEn,
+                    onValueChange = { descEn = it },
+                    label = { Text("Sidebar Description (EN)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height((12 * scaleFactor).dp))
+
+        // SV Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(modifier = Modifier.padding((16 * scaleFactor).dp)) {
+                Text("Svenska (SV)", fontWeight = FontWeight.Bold, fontSize = (18 * scaleFactor).sp, color = MainOrange)
+                Spacer(modifier = Modifier.height((8 * scaleFactor).dp))
+                OutlinedTextField(
+                    value = titleSv,
+                    onValueChange = { titleSv = it },
+                    label = { Text("Sidoinlägg titel (SV)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height((8 * scaleFactor).dp))
+                OutlinedTextField(
+                    value = descSv,
+                    onValueChange = { descSv = it },
+                    label = { Text("Sidoinlägg beskrivning (SV)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height((20 * scaleFactor).dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            OutlinedButton(
+                onClick = {
+                    viewModel.resetSidebarTexts()
+                    titleFi = viewModel.getSidebarTitle("FI")
+                    descFi = viewModel.getSidebarDesc("FI")
+                    titleEn = viewModel.getSidebarTitle("EN")
+                    descEn = viewModel.getSidebarDesc("EN")
+                    titleSv = viewModel.getSidebarTitle("SV")
+                    descSv = viewModel.getSidebarDesc("SV")
+                    Toast.makeText(context, "Oletustekstit palautettu!", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier.height((48 * scaleFactor).dp)
+            ) {
+                Text("Palauta oletukset")
+            }
+
+            Spacer(modifier = Modifier.width((16 * scaleFactor).dp))
+
+            Button(
+                onClick = {
+                    viewModel.saveSidebarTexts(
+                        titleFi = titleFi, descFi = descFi,
+                        titleEn = titleEn, descEn = descEn,
+                        titleSv = titleSv, descSv = descSv
+                    )
+                    Toast.makeText(context, "Sivupalkin tekstit tallennettu!", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier.height((48 * scaleFactor).dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+            ) {
+                Text("Tallenna tekstit", color = Color.White)
+            }
+        }
+
+        Spacer(modifier = Modifier.height((24 * scaleFactor).dp))
+    }
 }
