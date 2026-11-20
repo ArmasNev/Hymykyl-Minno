@@ -15,5 +15,6 @@ data class SurveyQuestion(
     val textFi: String,
     val textEn: String,
     val textSv: String,
-    val displayOrder: Int = 0
+    val displayOrder: Int = 0,
+    val isArchived: Boolean = false
 )

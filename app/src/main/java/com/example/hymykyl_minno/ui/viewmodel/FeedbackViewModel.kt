@@ -59,6 +59,10 @@ class FeedbackViewModel(
         .map { list -> list.distinctBy { it.questionKey } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val activeSurveyQuestions: StateFlow<List<SurveyQuestion>> = repository.getAllQuestions()
+        .map { list -> list.filter { !it.isArchived }.distinctBy { it.questionKey } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val serviceOptions: StateFlow<List<ServiceOption>> = repository.getAllServices()
         .map { list -> list.distinctBy { it.serviceKey } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -321,6 +325,18 @@ class FeedbackViewModel(
 
     fun deleteQuestion(question: SurveyQuestion) {
         viewModelScope.launch {
+            repository.updateQuestion(question.copy(isArchived = true))
+        }
+    }
+
+    fun restoreQuestion(question: SurveyQuestion) {
+        viewModelScope.launch {
+            repository.updateQuestion(question.copy(isArchived = false))
+        }
+    }
+
+    fun permanentlyDeleteQuestion(question: SurveyQuestion) {
+        viewModelScope.launch {
             repository.deleteQuestion(question)
         }
     }
@@ -410,7 +426,7 @@ class FeedbackViewModel(
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val freshAnswers = repository.getAllAnswersDirect()
         val answersMap = freshAnswers.groupBy { it.feedbackId }
-        val currentQuestions = repository.getAllQuestions().first().distinctBy { it.questionKey }
+        val currentQuestions = repository.getAllQuestions().first().filter { !it.isArchived }.distinctBy { it.questionKey }
 
         val sb = StringBuilder()
 

@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -65,6 +66,7 @@ fun AdminDashboardScreen(
     var selectedTab by remember { mutableIntStateOf(0) } // 0 = Export, 1 = Kysymykset, 2 = Palvelut
     var editingQuestion by remember { mutableStateOf<SurveyQuestion?>(null) }
     var deletingQuestion by remember { mutableStateOf<SurveyQuestion?>(null) }
+    var permanentDeletingQuestion by remember { mutableStateOf<SurveyQuestion?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
 
     var editingService by remember { mutableStateOf<ServiceOption?>(null) }
@@ -307,10 +309,13 @@ fun AdminDashboardScreen(
                                 verticalArrangement = Arrangement.spacedBy((16 * scaleFactor).dp)
                             ) {
                                 items(questions) { q ->
+                                    val isArchived = q.isArchived
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
-                                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = if (isArchived) Color(0xFFF2F2F2) else Color.White
+                                        ),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = if (isArchived) 0.dp else 2.dp)
                                     ) {
                                         Row(
                                             modifier = Modifier
@@ -320,31 +325,67 @@ fun AdminDashboardScreen(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Column(modifier = Modifier.weight(1f)) {
-                                                Text(text = "FI: ${q.textFi}", fontWeight = FontWeight.Bold, fontSize = cardTextFiFontSize, color = TextDark)
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(
+                                                        text = "FI: ${q.textFi}",
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = cardTextFiFontSize,
+                                                        color = if (isArchived) Color.Gray else TextDark
+                                                    )
+                                                    if (isArchived) {
+                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                        Surface(
+                                                            color = Color.LightGray,
+                                                            shape = MaterialTheme.shapes.extraSmall
+                                                        ) {
+                                                            Text(
+                                                                text = "Arkistoitu",
+                                                                fontSize = (12 * scaleFactor).sp,
+                                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                                color = Color.DarkGray
+                                                            )
+                                                        }
+                                                    }
+                                                }
                                                 Spacer(modifier = Modifier.height(4.dp))
                                                 Text(text = "EN: ${q.textEn}", fontSize = cardTextOtherFontSize, color = Color.Gray)
                                                 Spacer(modifier = Modifier.height(2.dp))
                                                 Text(text = "SV: ${q.textSv}", fontSize = cardTextOtherFontSize, color = Color.Gray)
                                             }
 
-                                            Row {
-                                                IconButton(
-                                                    onClick = { viewModel.moveQuestionUp(q) },
-                                                    enabled = q != questions.firstOrNull()
-                                                ) {
-                                                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Siirrä ylös", tint = Color.Gray, modifier = Modifier.size(iconSize))
-                                                }
-                                                IconButton(
-                                                    onClick = { viewModel.moveQuestionDown(q) },
-                                                    enabled = q != questions.lastOrNull()
-                                                ) {
-                                                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Siirrä alas", tint = Color.Gray, modifier = Modifier.size(iconSize))
-                                                }
-                                                IconButton(onClick = { editingQuestion = q }) {
-                                                    Icon(Icons.Default.Edit, contentDescription = "Muokkaa", tint = MainOrange, modifier = Modifier.size(iconSize))
-                                                }
-                                                IconButton(onClick = { deletingQuestion = q }) {
-                                                    Icon(Icons.Default.Delete, contentDescription = "Poista", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(iconSize))
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                if (isArchived) {
+                                                    Button(
+                                                        onClick = { viewModel.restoreQuestion(q) },
+                                                        colors = ButtonDefaults.buttonColors(containerColor = MainOrange),
+                                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                                    ) {
+                                                        Icon(Icons.Default.Refresh, contentDescription = "Palauta", tint = Color.White, modifier = Modifier.size((18 * scaleFactor).dp))
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        Text("Palauta", fontSize = (14 * scaleFactor).sp, color = Color.White)
+                                                    }
+                                                    IconButton(onClick = { permanentDeletingQuestion = q }) {
+                                                        Icon(Icons.Default.Delete, contentDescription = "Poista lopullisesti", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(iconSize))
+                                                    }
+                                                } else {
+                                                    IconButton(
+                                                        onClick = { viewModel.moveQuestionUp(q) },
+                                                        enabled = q != questions.firstOrNull { !it.isArchived }
+                                                    ) {
+                                                        Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Siirrä ylös", tint = Color.Gray, modifier = Modifier.size(iconSize))
+                                                    }
+                                                    IconButton(
+                                                        onClick = { viewModel.moveQuestionDown(q) },
+                                                        enabled = q != questions.lastOrNull { !it.isArchived }
+                                                    ) {
+                                                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Siirrä alas", tint = Color.Gray, modifier = Modifier.size(iconSize))
+                                                    }
+                                                    IconButton(onClick = { editingQuestion = q }) {
+                                                        Icon(Icons.Default.Edit, contentDescription = "Muokkaa", tint = MainOrange, modifier = Modifier.size(iconSize))
+                                                    }
+                                                    IconButton(onClick = { deletingQuestion = q }) {
+                                                        Icon(Icons.Default.Delete, contentDescription = "Arkistoi", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(iconSize))
+                                                    }
                                                 }
                                             }
                                         }
@@ -553,12 +594,12 @@ fun AdminDashboardScreen(
         )
     }
 
-    // Delete Question Confirmation Dialog
+    // Delete / Archive Question Confirmation Dialog
     deletingQuestion?.let { q ->
         AlertDialog(
             onDismissRequest = { deletingQuestion = null },
-            title = { Text("Poista kysymys?", fontSize = 20.sp) },
-            text = { Text("Haluatko varmasti poistaa kysymyksen: \"${q.textFi}\"?", fontSize = 16.sp) },
+            title = { Text("Arkistoidaanko kysymys?", fontSize = 20.sp) },
+            text = { Text("Haluatko varmasti siirtää kysymyksen: \"${q.textFi}\" arkistoon? Voit palauttaa sen milloin tahansa takaisin kyselyyn.", fontSize = 16.sp) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -567,11 +608,36 @@ fun AdminDashboardScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Poista", color = Color.White, fontSize = 16.sp)
+                    Text("Arkistoi", color = Color.White, fontSize = 16.sp)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { deletingQuestion = null }) {
+                    Text("Peruuta", fontSize = 16.sp)
+                }
+            }
+        )
+    }
+
+    // Permanent Delete Question Confirmation Dialog
+    permanentDeletingQuestion?.let { q ->
+        AlertDialog(
+            onDismissRequest = { permanentDeletingQuestion = null },
+            title = { Text("Poistetaanko kysymys lopullisesti?", fontSize = 20.sp) },
+            text = { Text("Haluatko varmasti poistaa kysymyksen: \"${q.textFi}\" kokonaan tietokannasta? Tätä toimintoa ei voi peruuttaa.", fontSize = 16.sp) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.permanentlyDeleteQuestion(q)
+                        permanentDeletingQuestion = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Poista lopullisesti", color = Color.White, fontSize = 16.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { permanentDeletingQuestion = null }) {
                     Text("Peruuta", fontSize = 16.sp)
                 }
             }

@@ -39,7 +39,7 @@ fun DetailedFeedbackScreen(
     val uiState by viewModel.uiState.collectAsState()
     val lang = uiState.selectedLanguage
     val animStyle = uiState.animationStyle
-    val dbQuestions by viewModel.surveyQuestions.collectAsState()
+    val dbQuestions by viewModel.activeSurveyQuestions.collectAsState()
 
     val fallbackQuestions = listOf(
         "Palvelut olivat helposti saatavilla",

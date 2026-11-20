@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Feedback::class, AdminUser::class, SurveyQuestion::class, FeedbackAnswer::class, ServiceOption::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class FeedbackDatabase : RoomDatabase() {
