@@ -8,6 +8,7 @@ import com.example.hymykyl_minno.data.AdminUser
 import com.example.hymykyl_minno.data.Feedback
 import com.example.hymykyl_minno.data.FeedbackAnswer
 import com.example.hymykyl_minno.data.FeedbackRepository
+import com.example.hymykyl_minno.data.LandingQuestion
 import com.example.hymykyl_minno.data.ServiceOption
 import com.example.hymykyl_minno.data.SurveyQuestion
 import com.example.hymykyl_minno.ui.localization.AppStrings
@@ -29,6 +30,7 @@ data class FeedbackUiState(
     val npsRating: Int = 0,
     val selectedService: String = "",
     val detailedRatings: Map<Int, Int> = emptyMap(),
+    val landingAnswers: Map<Int, String> = emptyMap(),
     val comment: String = "",
     val isSubmitted: Boolean = false,
     val animationStyle: String = "FADE_EXPAND",
@@ -65,6 +67,14 @@ class FeedbackViewModel(
 
     val serviceOptions: StateFlow<List<ServiceOption>> = repository.getAllServices()
         .map { list -> list.distinctBy { it.serviceKey } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val landingQuestions: StateFlow<List<LandingQuestion>> = repository.getAllLandingQuestions()
+        .map { list -> list.distinctBy { it.questionKey } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val activeLandingQuestions: StateFlow<List<LandingQuestion>> = repository.getAllLandingQuestions()
+        .map { list -> list.filter { !it.isArchived }.take(3).distinctBy { it.questionKey } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
@@ -218,6 +228,18 @@ class FeedbackViewModel(
         _uiState.update { it.copy(npsRating = rating) }
     }
 
+    fun updateLandingAnswer(questionId: Int, choice: String) {
+        _uiState.update { state ->
+            val updatedMap = state.landingAnswers.toMutableMap()
+            if (updatedMap[questionId] == choice) {
+                updatedMap.remove(questionId) // Deselect if tapped again
+            } else {
+                updatedMap[questionId] = choice
+            }
+            state.copy(landingAnswers = updatedMap)
+        }
+    }
+
     fun updateService(service: String) {
         _uiState.update { it.copy(selectedService = service) }
     }
@@ -257,6 +279,22 @@ class FeedbackViewModel(
             val currentQuestions = repository.getAllQuestions().first().distinctBy { it.questionKey }
 
             val answerList = mutableListOf<FeedbackAnswer>()
+
+            // Save landing question selections
+            for ((lqId, choice) in state.landingAnswers) {
+                val lq = activeLandingQuestions.value.find { it.id == lqId }
+                val lqText = lq?.textFi ?: "Sivu 1 kysymys"
+                answerList.add(
+                    FeedbackAnswer(
+                        feedbackId = feedbackId,
+                        questionId = 1000 + lqId,
+                        questionTextSnapshot = "[Sivu 1] $lqText: $choice",
+                        rating = 1
+                    )
+                )
+            }
+
+            // Save detailed question ratings
             for (i in currentQuestions.indices) {
                 val rating = state.detailedRatings[i] ?: 0
                 if (rating > 0) {
@@ -301,7 +339,7 @@ class FeedbackViewModel(
         return admin.passwordHash == password
     }
 
-    // Question Management
+    // Question Management (Step 3 Detailed Survey Questions)
     fun updateQuestion(question: SurveyQuestion) {
         viewModelScope.launch {
             repository.updateQuestion(question)
@@ -367,6 +405,83 @@ class FeedbackViewModel(
         }
     }
 
+    // Landing Question Management (Step 1 Freeform Multiple Choice, Max 3)
+    fun addLandingQuestion(
+        textFi: String, textEn: String, textSv: String,
+        optionsFi: String, optionsEn: String, optionsSv: String
+    ) {
+        viewModelScope.launch {
+            val currentList = landingQuestions.value
+            val activeCount = currentList.count { !it.isArchived }
+            if (activeCount >= 3) return@launch // Enforce max 3 active questions
+
+            val nextOrder = (currentList.maxOfOrNull { it.displayOrder } ?: 0) + 1
+            val newQ = LandingQuestion(
+                questionKey = "LANDING_Q_${System.currentTimeMillis()}",
+                textFi = textFi.trim(),
+                textEn = textEn.trim().ifEmpty { textFi.trim() },
+                textSv = textSv.trim().ifEmpty { textFi.trim() },
+                optionsFi = optionsFi.trim(),
+                optionsEn = optionsEn.trim().ifEmpty { optionsFi.trim() },
+                optionsSv = optionsSv.trim().ifEmpty { optionsFi.trim() },
+                displayOrder = nextOrder
+            )
+            repository.insertLandingQuestion(newQ)
+        }
+    }
+
+    fun updateLandingQuestion(question: LandingQuestion) {
+        viewModelScope.launch {
+            repository.updateLandingQuestion(question)
+        }
+    }
+
+    fun deleteLandingQuestion(question: LandingQuestion) {
+        viewModelScope.launch {
+            repository.updateLandingQuestion(question.copy(isArchived = true))
+        }
+    }
+
+    fun restoreLandingQuestion(question: LandingQuestion) {
+        viewModelScope.launch {
+            val activeCount = landingQuestions.value.count { !it.isArchived }
+            if (activeCount >= 3) return@launch // Enforce max 3 active limit
+            repository.updateLandingQuestion(question.copy(isArchived = false))
+        }
+    }
+
+    fun permanentlyDeleteLandingQuestion(question: LandingQuestion) {
+        viewModelScope.launch {
+            repository.deleteLandingQuestion(question)
+        }
+    }
+
+    fun moveLandingQuestionUp(question: LandingQuestion) {
+        viewModelScope.launch {
+            val list = landingQuestions.value
+            val index = list.indexOfFirst { it.id == question.id }
+            if (index > 0) {
+                val prev = list[index - 1]
+                val tempOrder = question.displayOrder
+                repository.updateLandingQuestion(question.copy(displayOrder = prev.displayOrder))
+                repository.updateLandingQuestion(prev.copy(displayOrder = tempOrder))
+            }
+        }
+    }
+
+    fun moveLandingQuestionDown(question: LandingQuestion) {
+        viewModelScope.launch {
+            val list = landingQuestions.value
+            val index = list.indexOfFirst { it.id == question.id }
+            if (index >= 0 && index < list.size - 1) {
+                val next = list[index + 1]
+                val tempOrder = question.displayOrder
+                repository.updateLandingQuestion(question.copy(displayOrder = next.displayOrder))
+                repository.updateLandingQuestion(next.copy(displayOrder = tempOrder))
+            }
+        }
+    }
+
     // Service Option Management
     fun updateServiceOption(service: ServiceOption) {
         viewModelScope.launch {
@@ -425,13 +540,20 @@ class FeedbackViewModel(
     suspend fun generateCsvContent(feedbackList: List<Feedback>): String {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val freshAnswers = repository.getAllAnswersDirect()
+        val freshServices = repository.getAllServices().first().distinctBy { it.serviceKey }
         val answersMap = freshAnswers.groupBy { it.feedbackId }
         val currentQuestions = repository.getAllQuestions().first().filter { !it.isArchived }.distinctBy { it.questionKey }
+        val currentLandingQuestions = repository.getAllLandingQuestions().first().filter { !it.isArchived }.take(3).distinctBy { it.questionKey }
 
         val sb = StringBuilder()
 
         // Header
         sb.append("Palaute_ID,Päivämäärä,Kieli,Palvelu,NPS_Arvio")
+        for (i in currentLandingQuestions.indices) {
+            val lq = currentLandingQuestions[i]
+            val cleanLqText = lq.textFi.replace("\n", " ").replace(",", ";")
+            sb.append(",\"Sivu1_K${i + 1}: $cleanLqText\"")
+        }
         for (i in currentQuestions.indices) {
             val q = currentQuestions[i]
             val cleanQText = q.textFi.replace("\n", " ").replace(",", ";")
@@ -443,11 +565,36 @@ class FeedbackViewModel(
         for (item in feedbackList) {
             val dateStr = dateFormat.format(Date(item.timestamp))
             val cleanComment = item.comment.replace("\n", " ").replace(",", ";")
-            val cleanService = item.service.replace(",", ";")
+
+            val matchingService = freshServices.find { it.serviceKey.equals(item.service, ignoreCase = true) }
+            val displayServiceName = when {
+                matchingService != null -> when (item.languageUsed) {
+                    "EN" -> matchingService.textEn.ifEmpty { matchingService.textFi }
+                    "SV" -> matchingService.textSv.ifEmpty { matchingService.textFi }
+                    else -> matchingService.textFi
+                }
+                else -> item.service
+            }
+            val cleanService = displayServiceName.replace(",", ";")
 
             sb.append("${item.id},\"$dateStr\",\"${item.languageUsed}\",\"$cleanService\",${item.npsRating}")
 
             val itemAnswers = answersMap[item.id]
+
+            // Landing question choices
+            for (i in currentLandingQuestions.indices) {
+                val lq = currentLandingQuestions[i]
+                val ans = itemAnswers?.find {
+                    it.questionId == (1000 + lq.id) ||
+                    it.questionTextSnapshot.contains(lq.textFi, ignoreCase = true)
+                }
+                val choiceText = if (ans != null) {
+                    ans.questionTextSnapshot.substringAfter(": ").replace(",", ";")
+                } else ""
+                sb.append(",\"$choiceText\"")
+            }
+
+            // Survey question ratings
             for (i in currentQuestions.indices) {
                 val q = currentQuestions[i]
                 val ans = itemAnswers?.find {

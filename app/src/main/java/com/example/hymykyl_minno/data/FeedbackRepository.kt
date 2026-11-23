@@ -7,7 +7,8 @@ class FeedbackRepository(
     private val adminUserDao: AdminUserDao,
     private val surveyQuestionDao: SurveyQuestionDao,
     private val feedbackAnswerDao: FeedbackAnswerDao,
-    private val serviceOptionDao: ServiceOptionDao
+    private val serviceOptionDao: ServiceOptionDao,
+    private val landingQuestionDao: LandingQuestionDao
 ) {
     // Feedback Header
     suspend fun insertFeedback(feedback: Feedback): Long = feedbackDao.insertFeedback(feedback)
@@ -38,4 +39,11 @@ class FeedbackRepository(
     suspend fun insertServices(services: List<ServiceOption>) = serviceOptionDao.insertServices(services)
     suspend fun deleteService(service: ServiceOption) = serviceOptionDao.deleteService(service)
     suspend fun getServiceCount() = serviceOptionDao.getServiceCount()
+
+    // Landing Questions (Step 1 Freeform Multiple Choice)
+    fun getAllLandingQuestions(): Flow<List<LandingQuestion>> = landingQuestionDao.getAllQuestions()
+    suspend fun updateLandingQuestion(question: LandingQuestion) = landingQuestionDao.updateQuestion(question)
+    suspend fun insertLandingQuestion(question: LandingQuestion) = landingQuestionDao.insertQuestion(question)
+    suspend fun deleteLandingQuestion(question: LandingQuestion) = landingQuestionDao.deleteQuestion(question)
+    suspend fun getActiveLandingQuestionCount() = landingQuestionDao.getActiveQuestionCount()
 }

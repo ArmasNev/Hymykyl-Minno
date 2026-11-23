@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.hymykyl_minno.data.LandingQuestion
 import com.example.hymykyl_minno.data.ServiceOption
 import com.example.hymykyl_minno.data.SurveyQuestion
 import com.example.hymykyl_minno.ui.components.FeedbackLayout
@@ -62,8 +63,9 @@ fun AdminDashboardScreen(
     val feedbackList by viewModel.allFeedback.collectAsState()
     val questions by viewModel.surveyQuestions.collectAsState()
     val services by viewModel.serviceOptions.collectAsState()
+    val landingQuestions by viewModel.landingQuestions.collectAsState()
 
-    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Export, 1 = Kysymykset, 2 = Palvelut
+    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Export, 1 = Kysymykset, 2 = Palvelut, 3 = Sivupalkki
     var editingQuestion by remember { mutableStateOf<SurveyQuestion?>(null) }
     var deletingQuestion by remember { mutableStateOf<SurveyQuestion?>(null) }
     var permanentDeletingQuestion by remember { mutableStateOf<SurveyQuestion?>(null) }
@@ -72,6 +74,11 @@ fun AdminDashboardScreen(
     var editingService by remember { mutableStateOf<ServiceOption?>(null) }
     var deletingService by remember { mutableStateOf<ServiceOption?>(null) }
     var showAddServiceDialog by remember { mutableStateOf(false) }
+
+    var editingLandingQuestion by remember { mutableStateOf<LandingQuestion?>(null) }
+    var deletingLandingQuestion by remember { mutableStateOf<LandingQuestion?>(null) }
+    var permanentDeletingLandingQuestion by remember { mutableStateOf<LandingQuestion?>(null) }
+    var showAddLandingDialog by remember { mutableStateOf(false) }
 
     FeedbackLayout(
         customTitle = viewModel.getSidebarTitle("FI"),
@@ -226,7 +233,128 @@ fun AdminDashboardScreen(
                     1 -> {
                         // Questions Tab
                         val uiState by viewModel.uiState.collectAsState()
-                        Column(modifier = Modifier.weight(1f)) {
+                        val activeLandingCount = landingQuestions.count { !it.isArchived }
+
+                        Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                            // Section 1: Landing Page Multiple Choice Questions (Max 3)
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = (16 * scaleFactor).dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column(modifier = Modifier.padding((16 * scaleFactor).dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = "Sivu 1: Vapaamuotoiset monivalintakysymykset ($activeLandingCount / 3 aktiivista)",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = cardTitleFontSize,
+                                                color = TextDark
+                                            )
+                                            Text(
+                                                text = "Voit lisätä ensimmäiselle sivulle enintään 3 monivalintakysymystä (esim. Opiskelija, Henkilökunta, Ulkopuolinen)",
+                                                fontSize = cardTextOtherFontSize,
+                                                color = Color.Gray
+                                            )
+                                        }
+                                        Button(
+                                            onClick = { showAddLandingDialog = true },
+                                            enabled = activeLandingCount < 3,
+                                            colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                                        ) {
+                                            Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("Lisää (Sivu 1)", color = Color.White, fontSize = (14 * scaleFactor).sp)
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height((12 * scaleFactor).dp))
+
+                                    landingQuestions.forEach { lq ->
+                                        val isArchived = lq.isArchived
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 4.dp),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = if (isArchived) Color(0xFFE0E0E0) else Color.White
+                                            )
+                                        ) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(12.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Text(
+                                                            text = "FI: ${lq.textFi}",
+                                                            fontWeight = FontWeight.Bold,
+                                                            fontSize = cardTextFiFontSize,
+                                                            color = if (isArchived) Color.Gray else TextDark
+                                                        )
+                                                        if (isArchived) {
+                                                            Spacer(modifier = Modifier.width(8.dp))
+                                                            Surface(
+                                                                color = Color.LightGray,
+                                                                shape = MaterialTheme.shapes.extraSmall
+                                                            ) {
+                                                                Text("Arkistoitu", fontSize = 12.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color.DarkGray)
+                                                            }
+                                                        }
+                                                    }
+                                                    Text(text = "Vaihtoehdot (FI): ${lq.optionsFi}", fontSize = cardTextOtherFontSize, color = MainOrange)
+                                                }
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    if (isArchived) {
+                                                        Button(
+                                                            onClick = { viewModel.restoreLandingQuestion(lq) },
+                                                            enabled = activeLandingCount < 3,
+                                                            colors = ButtonDefaults.buttonColors(containerColor = MainOrange),
+                                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                                                        ) {
+                                                            Icon(Icons.Default.Refresh, contentDescription = "Palauta", tint = Color.White, modifier = Modifier.size(16.dp))
+                                                            Spacer(modifier = Modifier.width(4.dp))
+                                                            Text("Palauta", fontSize = 13.sp, color = Color.White)
+                                                        }
+                                                        IconButton(onClick = { permanentDeletingLandingQuestion = lq }) {
+                                                            Icon(Icons.Default.Delete, contentDescription = "Poista", tint = MaterialTheme.colorScheme.error)
+                                                        }
+                                                    } else {
+                                                        IconButton(
+                                                            onClick = { viewModel.moveLandingQuestionUp(lq) },
+                                                            enabled = lq != landingQuestions.firstOrNull { !it.isArchived }
+                                                        ) {
+                                                            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Ylös", tint = Color.Gray)
+                                                        }
+                                                        IconButton(
+                                                            onClick = { viewModel.moveLandingQuestionDown(lq) },
+                                                            enabled = lq != landingQuestions.lastOrNull { !it.isArchived }
+                                                        ) {
+                                                            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Alas", tint = Color.Gray)
+                                                        }
+                                                        IconButton(onClick = { editingLandingQuestion = lq }) {
+                                                            Icon(Icons.Default.Edit, contentDescription = "Muokkaa", tint = MainOrange)
+                                                        }
+                                                        IconButton(onClick = { deletingLandingQuestion = lq }) {
+                                                            Icon(Icons.Default.Delete, contentDescription = "Arkistoi", tint = MaterialTheme.colorScheme.error)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             // Animation A/B Testing Selection Card
                             Card(
                                 modifier = Modifier
@@ -304,11 +432,9 @@ fun AdminDashboardScreen(
                                 }
                             }
 
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.spacedBy((16 * scaleFactor).dp)
-                            ) {
-                                items(questions) { q ->
+                            // Questions List
+                            Column(verticalArrangement = Arrangement.spacedBy((12 * scaleFactor).dp)) {
+                                questions.forEach { q ->
                                     val isArchived = q.isArchived
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
@@ -487,7 +613,7 @@ fun AdminDashboardScreen(
         }
     }
 
-    // Add New Question Dialog
+    // Add New Question Dialog (Step 3 Detailed Question)
     if (showAddDialog) {
         var textFi by remember { mutableStateOf("") }
         var textEn by remember { mutableStateOf("") }
@@ -537,6 +663,91 @@ fun AdminDashboardScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false }) {
+                    Text("Peruuta", fontSize = 16.sp)
+                }
+            }
+        )
+    }
+
+    // Add Landing Question Dialog (Step 1 Freeform Multiple Choice, Max 3)
+    if (showAddLandingDialog) {
+        var textFi by remember { mutableStateOf("") }
+        var optionsFi by remember { mutableStateOf("Opiskelija, Henkilökunta, Ulkopuolinen") }
+        var textEn by remember { mutableStateOf("") }
+        var optionsEn by remember { mutableStateOf("Student, Staff, External Client") }
+        var textSv by remember { mutableStateOf("") }
+        var optionsSv by remember { mutableStateOf("Studerande, Personal, Ekstern klient") }
+
+        AlertDialog(
+            onDismissRequest = { showAddLandingDialog = false },
+            title = { Text("Lisää monivalintakysymys sivulle 1 (Max 3)", fontSize = 20.sp) },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedTextField(
+                        value = textFi,
+                        onValueChange = { textFi = it },
+                        label = { Text("Kysymys (FI) esim. Oletko?") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = optionsFi,
+                        onValueChange = { optionsFi = it },
+                        label = { Text("Vaihtoehdot pilkulla eroteltuna (FI)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = textEn,
+                        onValueChange = { textEn = it },
+                        label = { Text("Question (EN)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = optionsEn,
+                        onValueChange = { optionsEn = it },
+                        label = { Text("Options separated by comma (EN)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = textSv,
+                        onValueChange = { textSv = it },
+                        label = { Text("Fråga (SV)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = optionsSv,
+                        onValueChange = { optionsSv = it },
+                        label = { Text("Alternativ separerade med kommatecken (SV)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (textFi.isNotBlank()) {
+                            viewModel.addLandingQuestion(
+                                textFi = textFi.trim(),
+                                textEn = textEn.trim(),
+                                textSv = textSv.trim(),
+                                optionsFi = optionsFi.trim(),
+                                optionsEn = optionsEn.trim(),
+                                optionsSv = optionsSv.trim()
+                            )
+                            showAddLandingDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                ) {
+                    Text("Lisää monivalinta", fontSize = 16.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddLandingDialog = false }) {
                     Text("Peruuta", fontSize = 16.sp)
                 }
             }
@@ -594,6 +805,87 @@ fun AdminDashboardScreen(
         )
     }
 
+    // Edit Landing Question Dialog
+    editingLandingQuestion?.let { lq ->
+        var textFi by remember { mutableStateOf(lq.textFi) }
+        var optionsFi by remember { mutableStateOf(lq.optionsFi) }
+        var textEn by remember { mutableStateOf(lq.textEn) }
+        var optionsEn by remember { mutableStateOf(lq.optionsEn) }
+        var textSv by remember { mutableStateOf(lq.textSv) }
+        var optionsSv by remember { mutableStateOf(lq.optionsSv) }
+
+        AlertDialog(
+            onDismissRequest = { editingLandingQuestion = null },
+            title = { Text("Muokkaa sivu 1 monivalintaa", fontSize = 20.sp) },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedTextField(
+                        value = textFi,
+                        onValueChange = { textFi = it },
+                        label = { Text("Kysymys (FI)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = optionsFi,
+                        onValueChange = { optionsFi = it },
+                        label = { Text("Vaihtoehdot pilkulla eroteltuna (FI)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = textEn,
+                        onValueChange = { textEn = it },
+                        label = { Text("Question (EN)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = optionsEn,
+                        onValueChange = { optionsEn = it },
+                        label = { Text("Options (EN)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = textSv,
+                        onValueChange = { textSv = it },
+                        label = { Text("Fråga (SV)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = optionsSv,
+                        onValueChange = { optionsSv = it },
+                        label = { Text("Alternativ (SV)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val updated = lq.copy(
+                            textFi = textFi, optionsFi = optionsFi,
+                            textEn = textEn, optionsEn = optionsEn,
+                            textSv = textSv, optionsSv = optionsSv
+                        )
+                        viewModel.updateLandingQuestion(updated)
+                        editingLandingQuestion = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MainOrange)
+                ) {
+                    Text("Tallenna", fontSize = 16.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { editingLandingQuestion = null }) {
+                    Text("Peruuta", fontSize = 16.sp)
+                }
+            }
+        )
+    }
+
     // Delete / Archive Question Confirmation Dialog
     deletingQuestion?.let { q ->
         AlertDialog(
@@ -619,6 +911,31 @@ fun AdminDashboardScreen(
         )
     }
 
+    // Delete / Archive Landing Question Confirmation Dialog
+    deletingLandingQuestion?.let { lq ->
+        AlertDialog(
+            onDismissRequest = { deletingLandingQuestion = null },
+            title = { Text("Arkistoidaanko monivalinta?", fontSize = 20.sp) },
+            text = { Text("Haluatko varmasti siirtää sivu 1 monivalinnan: \"${lq.textFi}\" arkistoon?", fontSize = 16.sp) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteLandingQuestion(lq)
+                        deletingLandingQuestion = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Arkistoi", color = Color.White, fontSize = 16.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deletingLandingQuestion = null }) {
+                    Text("Peruuta", fontSize = 16.sp)
+                }
+            }
+        )
+    }
+
     // Permanent Delete Question Confirmation Dialog
     permanentDeletingQuestion?.let { q ->
         AlertDialog(
@@ -638,6 +955,31 @@ fun AdminDashboardScreen(
             },
             dismissButton = {
                 TextButton(onClick = { permanentDeletingQuestion = null }) {
+                    Text("Peruuta", fontSize = 16.sp)
+                }
+            }
+        )
+    }
+
+    // Permanent Delete Landing Question Confirmation Dialog
+    permanentDeletingLandingQuestion?.let { lq ->
+        AlertDialog(
+            onDismissRequest = { permanentDeletingLandingQuestion = null },
+            title = { Text("Poistetaanko monivalinta lopullisesti?", fontSize = 20.sp) },
+            text = { Text("Haluatko varmasti poistaa sivu 1 monivalinnan: \"${lq.textFi}\" kokonaan tietokannasta?", fontSize = 16.sp) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.permanentlyDeleteLandingQuestion(lq)
+                        permanentDeletingLandingQuestion = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Poista lopullisesti", color = Color.White, fontSize = 16.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { permanentDeletingLandingQuestion = null }) {
                     Text("Peruuta", fontSize = 16.sp)
                 }
             }
@@ -853,7 +1195,7 @@ private fun SidebarEditorSection(
             text = "Muokkaa sivupalkin tekstejä (Title & Description)",
             fontSize = (20 * scaleFactor).sp,
             fontWeight = FontWeight.Bold,
-            color = com.example.hymykyl_minno.ui.theme.TextDark
+            color = TextDark
         )
         Spacer(modifier = Modifier.height((4 * scaleFactor).dp))
         Text(

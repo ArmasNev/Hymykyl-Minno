@@ -14,7 +14,8 @@ class AppDataContainer(private val context: Context) : AppContainer {
             adminUserDao = db.adminUserDao(),
             surveyQuestionDao = db.surveyQuestionDao(),
             feedbackAnswerDao = db.feedbackAnswerDao(),
-            serviceOptionDao = db.serviceOptionDao()
+            serviceOptionDao = db.serviceOptionDao(),
+            landingQuestionDao = db.landingQuestionDao()
         )
     }
 }

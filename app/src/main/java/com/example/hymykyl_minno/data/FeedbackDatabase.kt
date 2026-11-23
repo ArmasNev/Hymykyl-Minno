@@ -10,8 +10,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [Feedback::class, AdminUser::class, SurveyQuestion::class, FeedbackAnswer::class, ServiceOption::class],
-    version = 5,
+    entities = [Feedback::class, AdminUser::class, SurveyQuestion::class, FeedbackAnswer::class, ServiceOption::class, LandingQuestion::class],
+    version = 6,
     exportSchema = false
 )
 abstract class FeedbackDatabase : RoomDatabase() {
@@ -20,6 +20,7 @@ abstract class FeedbackDatabase : RoomDatabase() {
     abstract fun surveyQuestionDao(): SurveyQuestionDao
     abstract fun feedbackAnswerDao(): FeedbackAnswerDao
     abstract fun serviceOptionDao(): ServiceOptionDao
+    abstract fun landingQuestionDao(): LandingQuestionDao
 
     companion object {
         @Volatile

@@ -19,6 +19,7 @@ import com.example.hymykyl_minno.ui.theme.TextDark
 import com.example.hymykyl_minno.ui.viewmodel.AppViewModelProvider
 import com.example.hymykyl_minno.ui.viewmodel.FeedbackViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NpsScreen(
     onNext: () -> Unit,
@@ -27,6 +28,7 @@ fun NpsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lang = uiState.selectedLanguage
+    val landingQuestions by viewModel.activeLandingQuestions.collectAsState()
 
     FeedbackLayout(
         selectedLanguage = lang,
@@ -64,7 +66,7 @@ fun NpsScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height((24 * scaleFactor).dp))
+                Spacer(modifier = Modifier.height((20 * scaleFactor).dp))
 
                 Text(
                     text = AppStrings.npsTitle(lang),
@@ -75,6 +77,59 @@ fun NpsScreen(
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
+
+                // Optional Landing Page Freeform Multiple Choice Questions (Max 3)
+                if (landingQuestions.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = (8 * scaleFactor).dp),
+                        verticalArrangement = Arrangement.spacedBy((12 * scaleFactor).dp)
+                    ) {
+                        landingQuestions.take(3).forEach { lq ->
+                            val qText = when (lang) {
+                                "EN" -> lq.textEn.ifEmpty { lq.textFi }
+                                "SV" -> lq.textSv.ifEmpty { lq.textFi }
+                                else -> lq.textFi
+                            }
+                            val rawOptions = when (lang) {
+                                "EN" -> lq.optionsEn.ifEmpty { lq.optionsFi }
+                                "SV" -> lq.optionsSv.ifEmpty { lq.optionsFi }
+                                else -> lq.optionsFi
+                            }
+                            val optionsList = rawOptions.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                            val currentSelected = uiState.landingAnswers[lq.id]
+
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Text(
+                                    text = qText,
+                                    fontSize = (20 * scaleFactor).sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextDark
+                                )
+                                Spacer(modifier = Modifier.height((6 * scaleFactor).dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy((8 * scaleFactor).dp)
+                                ) {
+                                    optionsList.forEach { option ->
+                                        val isSelected = currentSelected == option
+                                        FilterChip(
+                                            selected = isSelected,
+                                            onClick = { viewModel.updateLandingAnswer(lq.id, option) },
+                                            label = { Text(text = option, fontSize = (18 * scaleFactor).sp) },
+                                            colors = FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = MainOrange,
+                                                selectedLabelColor = Color.White
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                }
 
                 Column(modifier = Modifier.fillMaxWidth()) {
                     SmileyRatingBar(
