@@ -3,6 +3,8 @@ package com.example.hymykyl_minno.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -51,7 +53,7 @@ fun CommentScreen(
             val titleLineHeight = (46 * scaleFactor).sp
             val subtitleFontSize = (22 * scaleFactor).sp
             val stepFontSize = (20 * scaleFactor).sp
-            val fieldHeight = (200 * scaleFactor).dp
+            val fieldHeight = (180 * scaleFactor).dp
             val navButtonHeight = (64 * scaleFactor).dp
             val navButtonWidth = (220 * scaleFactor).dp
             val navFontSize = (22 * scaleFactor).sp
@@ -62,6 +64,7 @@ fun CommentScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding((32 * scaleFactor).dp)
+                    .imePadding()
                     .pointerInput(Unit) {
                         detectTapGestures {
                             focusManager.clearFocus()
@@ -69,83 +72,89 @@ fun CommentScreen(
                         }
                     }
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = AppStrings.stepIndicator(4, lang), color = Color.Gray, fontSize = stepFontSize)
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Text(
-                    text = AppStrings.commentTitle(lang),
-                    fontSize = titleFontSize,
-                    lineHeight = titleLineHeight,
-                    fontWeight = FontWeight.Bold,
-                    color = TextDark
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = AppStrings.commentSubtitle(lang),
-                    color = Color.Gray,
-                    fontSize = subtitleFontSize
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                OutlinedTextField(
-                    value = uiState.comment,
-                    onValueChange = { viewModel.updateComment(it) },
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(fieldHeight),
-                    textStyle = TextStyle(
-                        fontSize = inputFontSize,
-                        color = TextDark
-                    ),
-                    placeholder = { Text(text = AppStrings.commentPlaceholder(lang), fontSize = inputFontSize, color = Color.Gray) },
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            focusManager.clearFocus()
-                            keyboardController?.hide()
-                        }
-                    ),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MainOrange,
-                        unfocusedBorderColor = Color.LightGray
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFFFF9E5))
-                        .padding(14.dp)
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
                 ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = AppStrings.stepIndicator(4, lang), color = Color.Gray, fontSize = stepFontSize)
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     Text(
-                        text = when (lang) {
-                            "EN" -> "Reminder: Please do not include personal data like your name, email, or phone number."
-                            "SV" -> "Påminnelse: Vänligen skriv inte personuppgifter som namn, e-post eller telefonnummer."
-                            else -> "Muistutus: ethän kirjoita henkilötietoja, kuten nimeä, sähköpostia tai puhelinnumeroa."
-                        },
-                        color = Color(0xFF856404),
-                        fontSize = reminderFontSize
+                        text = AppStrings.commentTitle(lang),
+                        fontSize = titleFontSize,
+                        lineHeight = titleLineHeight,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDark
                     )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = AppStrings.commentSubtitle(lang),
+                        color = Color.Gray,
+                        fontSize = subtitleFontSize
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = uiState.comment,
+                        onValueChange = { viewModel.updateComment(it) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(fieldHeight),
+                        textStyle = TextStyle(
+                            fontSize = inputFontSize,
+                            color = TextDark
+                        ),
+                        placeholder = { Text(text = AppStrings.commentPlaceholder(lang), fontSize = inputFontSize, color = Color.Gray) },
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
+                            }
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MainOrange,
+                            unfocusedBorderColor = Color.LightGray
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFFFF9E5))
+                            .padding(14.dp)
+                    ) {
+                        Text(
+                            text = when (lang) {
+                                "EN" -> "Reminder: Please do not include personal data like your name, email, or phone number."
+                                "SV" -> "Påminnelse: Vänligen skriv inte personuppgifter som namn, e-post eller telefonnummer."
+                                else -> "Muistutus: ethän kirjoita henkilötietoja, kuten nimeä, sähköpostia tai puhelinnumeroa."
+                            },
+                            color = Color(0xFF856404),
+                            fontSize = reminderFontSize
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
-
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
