@@ -177,6 +177,22 @@ class FeedbackViewModel(
         }
     }
 
+    // Service Name Localization Lookup
+    fun getLocalizedServiceName(serviceKey: String, lang: String): String {
+        if (serviceKey.isBlank()) return ""
+        val option = serviceOptions.value.find { it.serviceKey.equals(serviceKey, ignoreCase = true) }
+            ?: serviceOptions.value.find { it.textFi.equals(serviceKey, ignoreCase = true) }
+        return if (option != null) {
+            when (lang) {
+                "EN" -> option.textEn.ifEmpty { option.textFi }
+                "SV" -> option.textSv.ifEmpty { option.textFi }
+                else -> option.textFi
+            }
+        } else {
+            AppStrings.localizedServiceName(serviceKey, lang)
+        }
+    }
+
     // Sidebar Customization
     fun getSidebarTitle(lang: String): String {
         val key = "SIDEBAR_TITLE_$lang"

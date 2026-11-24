@@ -96,7 +96,7 @@ fun DetailedFeedbackScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    val serviceLocalized = AppStrings.localizedServiceName(uiState.selectedService, lang)
+                    val serviceLocalized = viewModel.getLocalizedServiceName(uiState.selectedService, lang)
                     Text(
                         text = AppStrings.detailedTitle(serviceLocalized, lang),
                         fontSize = titleFontSize,
@@ -195,11 +195,11 @@ fun QuestionItem(
     onActivate: () -> Unit,
     onRatingSelected: (Int) -> Unit
 ) {
-    val duration = 400
+    val duration = 500
     val enterTransition = when (animationStyle) {
         "FADE_ONLY" -> fadeIn(animationSpec = tween(400))
         "SLIDE_HORIZONTAL" -> slideInHorizontally(animationSpec = tween(duration, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(duration))
-        "SPRING_BOUNCE" -> expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow))
+        "SPRING_BOUNCE" -> scaleIn(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = 120f), initialScale = 0.72f) + expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = 120f)) + fadeIn(animationSpec = tween(550))
         "INSTANT" -> EnterTransition.None
         else -> expandVertically(animationSpec = tween(duration, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(duration))
     }
@@ -207,7 +207,7 @@ fun QuestionItem(
     val exitTransition = when (animationStyle) {
         "FADE_ONLY" -> fadeOut(animationSpec = tween(400))
         "SLIDE_HORIZONTAL" -> slideOutHorizontally(animationSpec = tween(duration, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(duration))
-        "SPRING_BOUNCE" -> shrinkVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow))
+        "SPRING_BOUNCE" -> scaleOut(animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 120f), targetScale = 0.72f) + shrinkVertically(animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
         "INSTANT" -> ExitTransition.None
         else -> shrinkVertically(animationSpec = tween(duration, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(duration))
     }

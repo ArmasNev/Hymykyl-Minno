@@ -200,3 +200,64 @@ private fun FiveRatingItem(
         )
     }
 }
+
+@Composable
+fun MiniFiveSmileyRatingBar(
+    selectedRating: Int,
+    onRatingSelected: (Int) -> Unit
+) {
+    val fiveColors = listOf(
+        RatingRed1,
+        RatingOrange1,
+        RatingYellow1,
+        RatingLightGreen2,
+        RatingGreen2
+    )
+    val fiveEmojis = listOf("😡", "😣", "😐", "😊", "😄")
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        for (i in 1..5) {
+            Box(modifier = Modifier.weight(1f)) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onRatingSelected(i) }
+                ) {
+                    val color = fiveColors[i - 1]
+                    val isSelected = selectedRating == i
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .aspectRatio(1f)
+                            .clip(CircleShape)
+                            .background(if (isSelected) color else color.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = fiveEmojis[i - 1],
+                            fontSize = 24.sp,
+                            style = TextStyle(
+                                platformStyle = PlatformTextStyle(
+                                    includeFontPadding = false
+                                ),
+                                lineHeight = 24.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = i.toString(),
+                        color = Color.Black,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}

@@ -1,5 +1,6 @@
 package com.example.hymykyl_minno.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,7 +20,7 @@ import com.example.hymykyl_minno.ui.theme.TextDark
 import com.example.hymykyl_minno.ui.viewmodel.AppViewModelProvider
 import com.example.hymykyl_minno.ui.viewmodel.FeedbackViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun NpsScreen(
     onNext: () -> Unit,
@@ -47,6 +48,8 @@ fun NpsScreen(
             val navFontSize = (22 * scaleFactor).sp
             val scaleLabelSize = (22 * scaleFactor).sp
             val screenPadding = (32 * scaleFactor).dp
+            val choiceButtonHeight = (60 * scaleFactor).dp
+            val choiceFontSize = (22 * scaleFactor).sp
 
             Column(
                 modifier = Modifier
@@ -103,26 +106,36 @@ fun NpsScreen(
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 Text(
                                     text = qText,
-                                    fontSize = (20 * scaleFactor).sp,
+                                    fontSize = (22 * scaleFactor).sp,
                                     fontWeight = FontWeight.Bold,
                                     color = TextDark
                                 )
-                                Spacer(modifier = Modifier.height((6 * scaleFactor).dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy((8 * scaleFactor).dp)
+                                Spacer(modifier = Modifier.height((8 * scaleFactor).dp))
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy((12 * scaleFactor).dp),
+                                    verticalArrangement = Arrangement.spacedBy((8 * scaleFactor).dp)
                                 ) {
                                     optionsList.forEach { option ->
                                         val isSelected = currentSelected == option
-                                        FilterChip(
-                                            selected = isSelected,
+                                        Button(
                                             onClick = { viewModel.updateLandingAnswer(lq.id, option) },
-                                            label = { Text(text = option, fontSize = (18 * scaleFactor).sp) },
-                                            colors = FilterChipDefaults.filterChipColors(
-                                                selectedContainerColor = MainOrange,
-                                                selectedLabelColor = Color.White
+                                            modifier = Modifier.height(choiceButtonHeight),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = if (isSelected) MainOrange else Color.White,
+                                                contentColor = if (isSelected) Color.White else TextDark
+                                            ),
+                                            border = BorderStroke(
+                                                (2 * scaleFactor).dp,
+                                                if (isSelected) MainOrange else Color.LightGray
+                                            ),
+                                            contentPadding = PaddingValues(horizontal = (20 * scaleFactor).dp, vertical = (12 * scaleFactor).dp)
+                                        ) {
+                                            Text(
+                                                text = option,
+                                                fontSize = choiceFontSize,
+                                                fontWeight = FontWeight.Bold
                                             )
-                                        )
+                                        }
                                     }
                                 }
                             }

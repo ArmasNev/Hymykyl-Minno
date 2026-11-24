@@ -8,6 +8,12 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import androidx.compose.animation.*
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,8 +42,16 @@ import com.example.hymykyl_minno.data.LandingQuestion
 import com.example.hymykyl_minno.data.ServiceOption
 import com.example.hymykyl_minno.data.SurveyQuestion
 import com.example.hymykyl_minno.ui.components.FeedbackLayout
+import com.example.hymykyl_minno.ui.components.FiveSmileyRatingBar
+import com.example.hymykyl_minno.ui.components.MiniFiveSmileyRatingBar
 import com.example.hymykyl_minno.ui.theme.MainOrange
+import com.example.hymykyl_minno.ui.theme.RatingGreen2
+import com.example.hymykyl_minno.ui.theme.RatingLightGreen2
+import com.example.hymykyl_minno.ui.theme.RatingOrange1
+import com.example.hymykyl_minno.ui.theme.RatingRed1
+import com.example.hymykyl_minno.ui.theme.RatingYellow1
 import com.example.hymykyl_minno.ui.theme.TextDark
+import kotlinx.coroutines.delay
 import com.example.hymykyl_minno.ui.viewmodel.AppViewModelProvider
 import com.example.hymykyl_minno.ui.viewmodel.FeedbackViewModel
 import kotlinx.coroutines.launch
@@ -355,7 +369,7 @@ fun AdminDashboardScreen(
                                 }
                             }
 
-                            // Animation A/B Testing Selection Card
+                            // Animation A/B Testing Selection Card with Live 5-Smiley Interactive Preview
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -363,45 +377,161 @@ fun AdminDashboardScreen(
                                 colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF9E5)),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                             ) {
-                                Column(modifier = Modifier.padding((16 * scaleFactor).dp)) {
-                                    Text(
-                                        text = "Animaatiotyyli",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = cardTitleFontSize,
-                                        color = TextDark
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "Valitse vaiheen 3 kysymysanimaation tyyli:",
-                                        fontSize = cardTextOtherFontSize,
-                                        color = Color.Gray
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                val currentStyle = uiState.animationStyle
+                                var previewRating by remember { mutableIntStateOf(4) }
+                                var isPreviewVisible by remember { mutableStateOf(true) }
 
-                                    val currentStyle = uiState.animationStyle
-                                    val animOptions = listOf(
-                                        "FADE_EXPAND" to "Pehmeä laajennus",
-                                        "FADE_ONLY" to "Paikallaan pysyvä (Ei liikettä)",
-                                        "SLIDE_HORIZONTAL" to "Sivuttaisliuku (Slide)",
-                                        "SPRING_BOUNCE" to "Joustava (Spring)",
-                                        "INSTANT" to "Välitön"
-                                    )
+                                val duration = 400
+                                val enterTransition = when (currentStyle) {
+                                    "FADE_ONLY" -> fadeIn(animationSpec = tween(400))
+                                    "SLIDE_HORIZONTAL" -> slideInHorizontally(animationSpec = tween(duration, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(duration))
+                                    "SPRING_BOUNCE" -> scaleIn(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = 120f), initialScale = 0.72f) + expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = 120f)) + fadeIn(animationSpec = tween(550))
+                                    "INSTANT" -> EnterTransition.None
+                                    else -> expandVertically(animationSpec = tween(duration, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(duration))
+                                }
 
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy((8 * scaleFactor).dp)
-                                    ) {
-                                        animOptions.forEach { (style, label) ->
-                                            val isSelected = currentStyle == style
-                                            FilterChip(
-                                                selected = isSelected,
-                                                onClick = { viewModel.updateAnimationStyle(style) },
-                                                label = { Text(label, fontSize = (14 * scaleFactor).sp) },
-                                                colors = FilterChipDefaults.filterChipColors(
-                                                    selectedContainerColor = MainOrange,
-                                                    selectedLabelColor = Color.White
+                                val exitTransition = when (currentStyle) {
+                                    "FADE_ONLY" -> fadeOut(animationSpec = tween(400))
+                                    "SLIDE_HORIZONTAL" -> slideOutHorizontally(animationSpec = tween(duration, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(duration))
+                                    "SPRING_BOUNCE" -> scaleOut(animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 120f), targetScale = 0.72f) + shrinkVertically(animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
+                                    "INSTANT" -> ExitTransition.None
+                                    else -> shrinkVertically(animationSpec = tween(duration, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(duration))
+                                }
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding((16 * scaleFactor).dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // Left Side: Animation Selector Buttons
+                                    Column(modifier = Modifier.weight(0.52f)) {
+                                        Text(
+                                            text = "Animaatiotyyli (A/B-Testaus)",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = cardTitleFontSize,
+                                            color = TextDark
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "Valitse vaiheen 3 kysymysanimaation tyyli:",
+                                            fontSize = cardTextOtherFontSize,
+                                            color = Color.Gray
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        val animOptions = listOf(
+                                            "FADE_EXPAND" to "Pehmeä laajennus",
+                                            "FADE_ONLY" to "Paikallaan pysyvä",
+                                            "SLIDE_HORIZONTAL" to "Sivuttaisliuku",
+                                            "SPRING_BOUNCE" to "Joustava",
+                                            "INSTANT" to "Välitön"
+                                        )
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy((6 * scaleFactor).dp)
+                                        ) {
+                                            animOptions.forEach { (style, label) ->
+                                                val isSelected = currentStyle == style
+                                                FilterChip(
+                                                    selected = isSelected,
+                                                    onClick = {
+                                                        viewModel.updateAnimationStyle(style)
+                                                        coroutineScope.launch {
+                                                            isPreviewVisible = false
+                                                            delay(150L)
+                                                            isPreviewVisible = true
+                                                        }
+                                                    },
+                                                    label = { Text(label, fontSize = (13 * scaleFactor).sp) },
+                                                    colors = FilterChipDefaults.filterChipColors(
+                                                        selectedContainerColor = MainOrange,
+                                                        selectedLabelColor = Color.White
+                                                    )
                                                 )
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.width((16 * scaleFactor).dp))
+
+                                    // Right Side: Live Interactive 5-Smiley Animation Preview Container
+                                    Card(
+                                        modifier = Modifier.weight(0.48f),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f))
+                                    ) {
+                                        Column(modifier = Modifier.padding((12 * scaleFactor).dp)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = "Esikatselu (Live)",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = (15 * scaleFactor).sp,
+                                                    color = MainOrange
+                                                )
+
+                                                IconButton(
+                                                    onClick = {
+                                                        coroutineScope.launch {
+                                                            isPreviewVisible = false
+                                                            delay(200L)
+                                                            isPreviewVisible = true
+                                                        }
+                                                    },
+                                                    modifier = Modifier.size((28 * scaleFactor).dp)
+                                                ) {
+                                                    Icon(
+                                                        Icons.Default.Refresh,
+                                                        contentDescription = "Testaa animaatio",
+                                                        tint = MainOrange,
+                                                        modifier = Modifier.size((18 * scaleFactor).dp)
+                                                    )
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.height(4.dp))
+
+                                            Text(
+                                                text = "1. Palvelut olivat helposti saatavilla",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = (15 * scaleFactor).sp,
+                                                color = TextDark
                                             )
+
+                                            Spacer(modifier = Modifier.height(6.dp))
+
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height((76 * scaleFactor).dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Column {
+                                                    AnimatedVisibility(
+                                                        visible = isPreviewVisible,
+                                                        enter = enterTransition,
+                                                        exit = exitTransition
+                                                    ) {
+                                                        MiniFiveSmileyRatingBar(
+                                                            selectedRating = previewRating,
+                                                            onRatingSelected = { rating ->
+                                                                previewRating = rating
+                                                                coroutineScope.launch {
+                                                                    isPreviewVisible = false
+                                                                    delay(200L)
+                                                                    isPreviewVisible = true
+                                                                }
+                                                            }
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
